@@ -1017,10 +1017,8 @@
     }
 
     function hideMixergyCard() {
-      const resultsContainer = document.getElementById("results");
-      if (!resultsContainer) return;
-      const cards = resultsContainer.querySelectorAll("article, .result-card");
-      cards.forEach((el) => {
+      const blocks = document.querySelectorAll("div, section, article");
+      blocks.forEach((el) => {
         if (!el || !el.textContent) return;
         if (el.textContent.includes("Mixergy smart cylinder")) {
           el.style.display = "none";
@@ -1034,37 +1032,90 @@
       const water = (selection.water || "").toLowerCase();
       const lines = [];
 
-      lines.push("Summary of implications based on your selection:");
-
+      // COMBI ---------------------------------------------------------
       if (boiler === "combi") {
-        lines.push("• Combi hot water is priority-fed – expect “one tap at a time”, flow/temperature will drop if more outlets run.");
-        lines.push("• Combi will usually need a larger gas supply than a typical 15 kW regular boiler.");
-        lines.push("• Combi systems are sealed/high-pressure – converting from open vent can expose existing minor leaks/weeps.");
-        lines.push("• Actual hot water flow depends on mains pressure and winter mains temperature.");
+        lines.push("**Selected system:** Combi boiler with on-demand hot water.");
+        lines.push("");
+        lines.push("**Requirements:**");
+        lines.push("- Larger gas supply than a typical 15 kW regular boiler may be required to maintain working pressure.");
+        lines.push("- System will be sealed/high pressure (expansion vessel, PRV, gauge, filling loop).");
+        lines.push("- Condensate route must be protected (may need extra labour to box/extend or pump).");
+        lines.push("");
+        lines.push("**Risks / implications:**");
+        lines.push("- Converting from open vent to sealed can expose existing minor leaks or weeps in old pipework/radiators.");
+        lines.push("- DHW is priority-fed: designed for **one tap/shower at a time**. Running multiple outlets will reduce flow/temperature.");
+        lines.push("- Actual hot water flow is limited by incoming mains pressure/flow and winter mains temperature.");
+        lines.push("");
+        lines.push("**Efficiency & future-proofing:**");
+        lines.push("- Best in small/medium households with single-outlet use.");
+        lines.push("- No stored cylinder, so fewer options later for heat pump or PV dump.");
+        lines.push("");
+        lines.push("**Customer advised:**");
+        lines.push("- Combi chosen instead of stored hot water: performance depends on mains and single-outlet use.");
+        lines.push("- Sealed system may show up existing leaks; remedial work may be needed.");
+        lines.push("- Gas pipe may need upsizing — to be confirmed on installation.");
         return lines.join("\n");
       }
 
+      // SYSTEM (unvented/vented with system boiler) -------------------
       if (boiler === "system") {
-        lines.push("• System boilers are sealed/high-pressure systems.");
-        lines.push("• Converting an old open-vented system to sealed can show up small existing leaks/weeps in pipework/rads.");
-        lines.push("• Cylinder retained → better for higher usage and future heat pump / PV with immersion back-up.");
-        lines.push("• System/cylinder setups tend to stay around ≈94% efficiency in real use when set up to condense.");
+        lines.push("**Selected system:** System boiler with stored hot water.");
+        lines.push("");
+        lines.push("**Requirements:**");
+        lines.push("- System boiler runs as a **sealed/high-pressure system** (expansion, PRV, filling loop).");
+        lines.push("- Cylinder to be retained/installed; immersion supply recommended.");
+        lines.push("- Condensate route to be confirmed/protected.");
+        lines.push("");
+        lines.push("**Risks / implications:**");
+        lines.push("- Pressurising an older, previously open-vented system can expose weeps/leaks at valves, rads and joints.");
+        lines.push("- Access may be needed for cylinder controls/safety devices.");
+        lines.push("");
+        lines.push("**Efficiency & future-proofing:**");
+        lines.push("- Stored/system setups tend to stay close to **≈94%** in real use because the boiler condenses longer.");
+        lines.push("- Keeping a cylinder supports future **heat pump** or **PV + immersion** integration and gives hot-water back-up.");
+        lines.push("");
+        lines.push("**Customer advised:**");
+        lines.push("- System will now be sealed/high pressure; minor existing leaks may become visible.");
+        lines.push("- Cylinder gives more reliable hot water for higher usage or multiple bathrooms.");
         return lines.join("\n");
       }
 
+      // REGULAR (open vented) -----------------------------------------
+      if (boiler === "regular" && (water.includes("open") || water.includes("vented"))) {
+        lines.push("**Selected system:** Regular (heat-only) boiler with **open-vented** cylinder.");
+        lines.push("");
+        lines.push("**Requirements:**");
+        lines.push("- Existing F&E/vent arrangement to remain (no change to sealed components).");
+        lines.push("- System clean/inhibit as per spec.");
+        lines.push("");
+        lines.push("**Risks / implications:**");
+        lines.push("- Low-pressure/open-vented system, so the sealing/leak risk advice does **not** apply here.");
+        lines.push("- Good choice where pipework/rads are old and you don’t want to pressurise them.");
+        lines.push("");
+        lines.push("**Efficiency & future-proofing:**");
+        lines.push("- Less future-proof than a sealed cylinder for heat pump, unless upgraded later.");
+        lines.push("- Cylinder still allows immersion back-up.");
+        lines.push("");
+        lines.push("**Customer advised:**");
+        lines.push("- System kept open vented to avoid pressurising older pipework.");
+        lines.push("- For future heat pump you would later need a suitable cylinder/sealed arrangement.");
+        return lines.join("\n");
+      }
+
+      // REGULAR but NOT vented (edge) ---------------------------------
       if (boiler === "regular") {
-        const openVented = water.includes("vented") || water.includes("open");
-        if (openVented) {
-          lines.push("• Regular boiler with open-vented cylinder keeps the system low pressure — sealing advice not applicable.");
-          lines.push("• Good option when existing vented cylinder is serviceable and you don’t want to risk pressurising old pipework.");
-        } else {
-          lines.push("• This setup may still be sealed — pressurising older systems can expose minor leaks.");
-        }
+        lines.push("**Selected system:** Regular (heat-only) boiler.");
+        lines.push("");
+        lines.push("**Requirements:**");
+        lines.push("- Check whether system is to be sealed — if yes, expansion and PRV will be required.");
+        lines.push("");
+        lines.push("**Risks / implications:**");
+        lines.push("- Sealing an older system can expose existing minor leaks.");
         return lines.join("\n");
       }
 
-      lines.push("• Keeping a cylinder supports future heat pump or PV options and gives immersion back-up.");
-      return lines.join("\n");
+      // fallback ------------------------------------------------------
+      return "**Summary:** Cylinder kept – supports future HP/PV, immersion backup, and keeps efficiency high.";
     }
 
     function renderSummary(selection) {
