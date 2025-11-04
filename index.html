@@ -125,6 +125,20 @@
       padding: .5rem .75rem 1rem;
       overflow-y: auto;
     }
+    #summary-section {
+      margin-top: .75rem;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: .6rem;
+      padding: .6rem .75rem;
+    }
+    #summary-section h2 {
+      margin: 0 0 .35rem;
+      font-size: .6rem;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
     /* list view */
     .result-card {
       background: #fff;
@@ -464,6 +478,10 @@
     <div id="right">
       <!-- results will be injected here -->
       <div id="results"></div>
+      <section id="summary-section">
+        <h2>Summary</h2>
+        <div id="summary"></div>
+      </section>
       <div id="summary-disclaimer">
         This illustration is for guidance only and does not constitute financial advice, a quotation, or a heating system design.
         Figures are derived from UK field research (2015–2025) on domestic water use, DHW efficiency, combi lag, cylinder losses, and installer-reported performance.
@@ -856,6 +874,13 @@
         convertToSealed,
         highOutput
       });
+
+      const bestOption = options[0];
+      hideMixergyCard();
+      renderSummary({
+        boiler: systemRecommendation && systemRecommendation.recommended,
+        water: bestOption && bestOption.water
+      });
     }
 
     function makeWhyText(opt, occupants, bathrooms) {
@@ -976,6 +1001,90 @@
           </section>
         </article>
       `;
+    }
+
+    function findSummaryContainer() {
+      let el = document.getElementById("summary");
+      if (el) return el;
+
+      const headings = document.querySelectorAll("#right h1, #right h2, #right h3, #right h4");
+      for (const heading of headings) {
+        if (heading.textContent && heading.textContent.toLowerCase().includes("summary")) {
+          return heading.parentElement || heading;
+        }
+      }
+      return document.body;
+    }
+
+    function hideMixergyCard() {
+      const resultsContainer = document.getElementById("results");
+      if (!resultsContainer) return;
+      const cards = resultsContainer.querySelectorAll("article, .result-card");
+      cards.forEach((el) => {
+        if (!el || !el.textContent) return;
+        if (el.textContent.includes("Mixergy smart cylinder")) {
+          el.style.display = "none";
+        }
+      });
+    }
+
+    function buildSummaryText(sel) {
+      const selection = sel || {};
+      const boiler = (selection.boiler || "").toLowerCase();
+      const water = (selection.water || "").toLowerCase();
+      const lines = [];
+
+      lines.push("Summary of implications based on your selection:");
+
+      if (boiler === "combi") {
+        lines.push("• Combi hot water is priority-fed – expect “one tap at a time”, flow/temperature will drop if more outlets run.");
+        lines.push("• Combi will usually need a larger gas supply than a typical 15 kW regular boiler.");
+        lines.push("• Combi systems are sealed/high-pressure – converting from open vent can expose existing minor leaks/weeps.");
+        lines.push("• Actual hot water flow depends on mains pressure and winter mains temperature.");
+        return lines.join("\n");
+      }
+
+      if (boiler === "system") {
+        lines.push("• System boilers are sealed/high-pressure systems.");
+        lines.push("• Converting an old open-vented system to sealed can show up small existing leaks/weeps in pipework/rads.");
+        lines.push("• Cylinder retained → better for higher usage and future heat pump / PV with immersion back-up.");
+        lines.push("• System/cylinder setups tend to stay around ≈94% efficiency in real use when set up to condense.");
+        return lines.join("\n");
+      }
+
+      if (boiler === "regular") {
+        const openVented = water.includes("vented") || water.includes("open");
+        if (openVented) {
+          lines.push("• Regular boiler with open-vented cylinder keeps the system low pressure — sealing advice not applicable.");
+          lines.push("• Good option when existing vented cylinder is serviceable and you don’t want to risk pressurising old pipework.");
+        } else {
+          lines.push("• This setup may still be sealed — pressurising older systems can expose minor leaks.");
+        }
+        return lines.join("\n");
+      }
+
+      lines.push("• Keeping a cylinder supports future heat pump or PV options and gives immersion back-up.");
+      return lines.join("\n");
+    }
+
+    function renderSummary(selection) {
+      const summaryContainer = findSummaryContainer();
+      if (!summaryContainer) return;
+
+      const text = buildSummaryText(selection);
+      const boxId = "system-rec-summary-box";
+      let box = document.getElementById(boxId);
+      if (!box) {
+        box = document.createElement("pre");
+        box.id = boxId;
+        box.style.whiteSpace = "pre-wrap";
+        box.style.background = "rgba(0,0,0,0.03)";
+        box.style.padding = "12px 14px";
+        box.style.borderRadius = "8px";
+        box.style.margin = "0";
+        summaryContainer.appendChild(box);
+      }
+      box.textContent = text;
     }
 
     // events
