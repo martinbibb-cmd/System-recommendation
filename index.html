@@ -97,12 +97,29 @@
       font-size: .65rem;
       margin-bottom: .35rem;
     }
+    label.checkbox {
+      flex-direction: row;
+      align-items: center;
+      gap: .45rem;
+      font-size: .6rem;
+      color: #0f172a;
+    }
+    label.checkbox span {
+      flex: 1;
+      line-height: 1.3;
+    }
     select, input {
       background: #fff;
       border: 1px solid var(--border);
       border-radius: .4rem;
       padding: .25rem .35rem;
       font-size: .65rem;
+    }
+    input[type="checkbox"] {
+      width: .75rem;
+      height: .75rem;
+      border-radius: .2rem;
+      margin: 0;
     }
     #right {
       padding: .5rem .75rem 1rem;
@@ -225,6 +242,68 @@
       color: #475569;
       margin-top: .4rem;
     }
+    .recommendation-card {
+      background: linear-gradient(135deg, #e0f2fe, #f8fafc);
+      border: 1px solid #bae6fd;
+      border-radius: .8rem;
+      padding: .7rem .8rem;
+      margin-bottom: .6rem;
+      font-size: 22pt;
+      display: flex;
+      flex-direction: column;
+      gap: .45rem;
+    }
+    .recommendation-card header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: .75rem;
+      font-size: .55em;
+      font-weight: 600;
+    }
+    .recommendation-card header span {
+      color: #0369a1;
+      font-size: .55em;
+    }
+    .recommendation-name {
+      font-size: .65em;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .recommendation-summary {
+      font-size: .45em;
+      color: #0f172a;
+      margin-top: .1rem;
+    }
+    .recommendation-score {
+      background: #0369a1;
+      color: #e0f2fe;
+      border-radius: 999px;
+      padding: .15rem .55rem;
+      font-size: .45em;
+      font-weight: 600;
+    }
+    .recommendation-card section {
+      font-size: .48em;
+      display: grid;
+      gap: .35rem;
+    }
+    .recommendation-card ul {
+      margin: 0;
+      padding-left: 1.1rem;
+    }
+    .recommendation-card li {
+      margin-bottom: .15rem;
+    }
+    .recommendation-alternatives li {
+      display: flex;
+      justify-content: space-between;
+      gap: .5rem;
+    }
+    .recommendation-alt-score {
+      color: #0369a1;
+      font-variant-numeric: tabular-nums;
+    }
     @media (max-width: 950px) {
       main { grid-template-columns: 1fr; }
       .result-card { flex-direction: column; }
@@ -318,6 +397,22 @@
             <option value="thermal_store">Thermal store</option>
             <option value="on_demand">On demand</option>
           </select>
+        </label>
+      </div>
+
+      <div class="nav-title">Installation preferences</div>
+      <div class="panel">
+        <label class="checkbox">
+          <input type="checkbox" id="prefKeepCylinder" checked />
+          <span>Prefer to keep or install a hot-water cylinder</span>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" id="prefConvertToSealed" />
+          <span>Considering conversion from open-vented to sealed/unvented</span>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" id="prefHighOutput" />
+          <span>High-output boiler (≥30&nbsp;kW) expected</span>
         </label>
       </div>
 
@@ -432,6 +527,137 @@
       "UK open-vented vs sealed system practice"
     ];
 
+    const SYSTEM_REC_MODELS = {
+      meta: {
+        version: "1.0",
+        description: "Offline reasoning weights and advisories for System Recommendation 2.0"
+      },
+      efficiency: {
+        combi: {
+          base: 0.90,
+          lowOccupancyBonus: 0.05,
+          highUsagePenalty: -0.20,
+          notes: [
+            "Best for 1–2 person households or single-outlet use.",
+            "Efficiency drops with long or simultaneous draws."
+          ]
+        },
+        system: {
+          base: 0.94,
+          stable: true,
+          notes: [
+            "Maintains condensing operation under load.",
+            "Better for larger households / multiple bathrooms."
+          ]
+        },
+        regular: {
+          base: 0.93,
+          legacy: true,
+          notes: [
+            "Best retained when existing vented cylinder is serviceable.",
+            "Can be converted to sealed later if required."
+          ]
+        },
+        mixergy: {
+          base: 0.94,
+          futureReady: true,
+          pvCompatible: true,
+          notes: [
+            "Can be partially heated for efficiency.",
+            "Convertible to heat pump or PV-linked operation."
+          ]
+        }
+      },
+      longevity: {
+        combi: 0.9,
+        system: 1.1,
+        regular: 1.0,
+        mixergy: 1.3,
+        factors: [
+          "Cylinder retained → improves future upgrade options.",
+          "Stored water gives immersion backup and PV integration."
+        ]
+      },
+      risks: {
+        sealedConversion: "Increased pressure can expose minor leaks; expansion kit required.",
+        combiTapLimit: "Combi gives hot-water priority – limited multi-outlet use.",
+        gasUpgrade: "High-output combis may require upsized gas pipe to meter.",
+        condensate: "External runs must be insulated or pumped to avoid freezing.",
+        electrical: "Immersion / Mixergy may require dedicated supply."
+      },
+      advice: {
+        CA01: "Advised: A combi is most efficient for small households using one outlet at a time.",
+        CA02: "Advised: Retaining a cylinder allows future upgrade to heat pump or solar PV.",
+        CA03: "Advised: Sealing system may reveal existing leaks in older pipework.",
+        CA04: "Advised: Gas pipe may need upsizing for larger boilers.",
+        CA05: "Advised: Condensing efficiency around 94% when correctly set up."
+      }
+    };
+
+    function getSystemRecommendation(inputs) {
+      const eff = SYSTEM_REC_MODELS.efficiency;
+      const lon = SYSTEM_REC_MODELS.longevity;
+      const risks = SYSTEM_REC_MODELS.risks;
+      const advice = SYSTEM_REC_MODELS.advice;
+
+      const occ = inputs.occupants || 2;
+      const baths = inputs.bathrooms || 1;
+
+      const scores = {
+        combi: eff.combi.base,
+        system: eff.system.base,
+        regular: eff.regular.base,
+        mixergy: eff.mixergy.base
+      };
+
+      if (occ <= 2 && baths === 1) {
+        scores.combi += eff.combi.lowOccupancyBonus;
+      } else {
+        scores.combi += eff.combi.highUsagePenalty;
+        scores.system += 0.05;
+        scores.mixergy += 0.05;
+      }
+
+      if (inputs.keepCylinder) {
+        scores.system *= lon.system;
+        scores.mixergy *= lon.mixergy;
+        scores.regular *= lon.regular;
+      }
+
+      const bestKey = Object.keys(scores).sort((a, b) => scores[b] - scores[a])[0];
+
+      const notes = [];
+
+      if (bestKey === "combi") {
+        notes.push(eff.combi.notes[0], advice.CA01);
+        if (occ > 2 || baths > 1) {
+          notes.push(risks.combiTapLimit);
+        }
+      }
+      if (bestKey === "system" || bestKey === "regular" || bestKey === "mixergy") {
+        notes.push(advice.CA02, advice.CA05);
+      }
+      if (bestKey === "mixergy") {
+        notes.push(risks.electrical);
+      }
+      if (inputs.convertToSealed) {
+        notes.push(risks.sealedConversion, advice.CA03);
+      }
+      if (inputs.highOutput) {
+        notes.push(risks.gasUpgrade, advice.CA04);
+      }
+      if (!inputs.keepCylinder && bestKey === "combi") {
+        notes.push("Note: removing storage reduces future heat pump / PV options.");
+      }
+
+      return {
+        recommended: bestKey,
+        score: scores[bestKey],
+        alternatives: Object.fromEntries(Object.entries(scores).filter(([k]) => k !== bestKey)),
+        notes
+      };
+    }
+
     function getRecommendedDraws(people) {
       const p = Number(people);
       if (p <= 1) return 12;
@@ -529,13 +755,25 @@
       const bedrooms = document.getElementById("bedrooms").value;
       const bathrooms = parseInt(document.getElementById("bathrooms").value, 10);
       const occupants = parseInt(document.getElementById("occupants").value, 10);
-      const drawsPerDay = parseInt(document.getElementById("drawsPerDay").value, 10);
+      const drawsInput = parseInt(document.getElementById("drawsPerDay").value, 10);
+      const drawsPerDay = Number.isFinite(drawsInput) ? drawsInput : getRecommendedDraws(occupants);
       const currentBoiler = document.getElementById("currentBoiler").value;
       const currentWater = document.getElementById("currentWater").value;
+      const keepCylinder = document.getElementById("prefKeepCylinder").checked;
+      const convertToSealed = document.getElementById("prefConvertToSealed").checked;
+      const highOutput = document.getElementById("prefHighOutput").checked;
       const newABoiler = document.getElementById("newABoiler").value;
       const newAWater = document.getElementById("newAWater").value;
       const newBBoiler = document.getElementById("newBBoiler").value;
       const newBWater = document.getElementById("newBWater").value;
+
+      const systemRecommendation = getSystemRecommendation({
+        occupants,
+        bathrooms,
+        keepCylinder,
+        convertToSealed,
+        highOutput
+      });
 
       const evalA = evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentBoiler, currentWater, newBoiler:newABoiler, newWater:newAWater});
       const evalB = evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentBoiler, currentWater, newBoiler:newBBoiler, newWater:newBWater});
@@ -565,10 +803,12 @@
       const bestId = options[0].id;
 
       const resultsDiv = document.getElementById("results");
-      resultsDiv.innerHTML = options.map(opt => {
+      const recommendationHtml = makeSystemRecommendationCard(systemRecommendation);
+      const optionsHtml = options.map(opt => {
         const why = makeWhyText(opt, occupants, bathrooms);
         return makeResultCard(opt, why, opt.id === bestId);
       }).join("");
+      resultsDiv.innerHTML = recommendationHtml + optionsHtml;
     }
 
     function makeWhyText(opt, occupants, bathrooms) {
@@ -637,12 +877,58 @@
       return `<img src="${src}" alt="${alt}" />`;
     }
 
+    const recommendationLabels = {
+      combi: "Combi boiler",
+      system: "System boiler + cylinder",
+      regular: "Regular boiler + vented cylinder",
+      mixergy: "Mixergy smart cylinder"
+    };
+
+    const recommendationSummaries = {
+      combi: "Single appliance, best where demand is modest.",
+      system: "Sealed system with unvented storage for higher draw homes.",
+      regular: "Retains vented cylinder and header tanks.",
+      mixergy: "Smart cylinder ready for PV / heat-pump integration."
+    };
+
     function formatBoilerName(value) {
       return boilerLabels[value] || value;
     }
 
     function formatWaterName(value) {
       return waterLabels[value] || value.replace(/_/g, " ");
+    }
+
+    function formatRecommendationName(key) {
+      return recommendationLabels[key] || key;
+    }
+
+    function makeSystemRecommendationCard(rec) {
+      const name = formatRecommendationName(rec.recommended);
+      const summary = recommendationSummaries[rec.recommended];
+      const score = rec.score.toFixed(2);
+      const notesHtml = (rec.notes || []).map(n => `<li>${n}</li>`).join("");
+      const alternatives = Object.entries(rec.alternatives || {})
+        .sort((a, b) => b[1] - a[1]);
+      const altHtml = alternatives.map(([key, value]) => {
+        return `<li><span>${formatRecommendationName(key)}</span><span class="recommendation-alt-score">${value.toFixed(2)}</span></li>`;
+      }).join("");
+
+      return `
+        <article class="recommendation-card">
+          <header>
+            <div>
+              <div class="recommendation-name">${name}</div>
+              ${summary ? `<div class="recommendation-summary">${summary}</div>` : ""}
+            </div>
+            <span class="recommendation-score">Score ${score}</span>
+          </header>
+          <section>
+            ${notesHtml ? `<div><strong>Key points</strong><ul>${notesHtml}</ul></div>` : ""}
+            ${altHtml ? `<div class="recommendation-alternatives"><strong>Other scores</strong><ul>${altHtml}</ul></div>` : ""}
+          </section>
+        </article>
+      `;
     }
 
     // events
