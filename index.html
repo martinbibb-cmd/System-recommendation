@@ -559,7 +559,7 @@
       return `${b} with ${w}`;
     }
 
-    function evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentWater, newBoiler, newWater}) {
+    function evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentBoiler, currentWater, newBoiler, newWater}) {
       const combiWarmup = 0.025;
       const combiDump = 0.015;
       const isCombi = newBoiler === "combi";
@@ -608,6 +608,11 @@
         score -= 1;
       }
 
+      if (isCombi && currentBoiler !== "combi") {
+        extraCost += 1500;
+        bullets.push("Changing to a combi: allow ≈ £1500 extra for conversion costs.");
+      }
+
       return {score, bullets, dailyWasteL, dailyOverheadKWh, dailyCylinderLoss, extraCost, isCombi, isUnvented};
     }
 
@@ -631,8 +636,8 @@
       updateSystemDiagram("picADiagram", newABoiler);
       updateSystemDiagram("picBDiagram", newBBoiler);
 
-      const evalA = evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentWater, newBoiler:newABoiler, newWater:newAWater});
-      const evalB = evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentWater, newBoiler:newBBoiler, newWater:newBWater});
+      const evalA = evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentBoiler, currentWater, newBoiler:newABoiler, newWater:newAWater});
+      const evalB = evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentBoiler, currentWater, newBoiler:newBBoiler, newWater:newBWater});
 
       const bestIsA = evalA.score >= evalB.score;
       const bestTick = document.getElementById("bestTick");
