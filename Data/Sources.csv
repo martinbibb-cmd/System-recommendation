@@ -1,0 +1,10 @@
+file: sources.csv
+source_id,reference_title,description,year,origin
+S1,"UK household water use figures","UK-style per person and by household size usage stats (149 L/day single, 276 L/day two-person, ~450 L/day four-person) used as baseline for occupancy scaling.",2023,"UK water usage summary / water utilities digest"
+S2,"UK domestic hot water energy ~4 kWh/day","Average UK dwelling uses ~80 L of 55°C hot water per day ≈ 4 kWh to heat – used for DHW baseline.",2022,"Energy Saving Trust / UK efficiency guidance summaries"
+S3,"Combi hot water delivery and waste observations","Real-world UK reports showing 5–8 L and 30–90 s waits for distant taps; cylinders ~1–2 L and ~10 s when sited centrally.",2020-2025,"Installer blogs, Heating Hub explainer, homeowner measurements"
+S4,"SAP/field combi DHW loss allowance","SAP and field trials typically add ~600 kWh/yr to combis for DHW/distribution/purge; also note per-draw warm-up and post-purge pump-overrun dumping residual heat.",2019,"Energy Saving Trust condensing boiler field trial synthesis"
+S5,"Open-vented vs sealed heating efficiency","Open-vented systems lose heat via F&E tank/vent; sealed systems remove that path so are marginally more efficient.",2019,"Heating Hub – open vs sealed system guidance"
+S6,"Field efficiencies of combi vs cylinder systems","Monitored UK homes: combis typically 75–82% for DHW over a year; cylinder systems 30–70% depending on low/high use and cylinder standing losses.",2018,"Energy Saving Trust style field monitoring / industry forum synthesis"
+S7,"Unvented cylinders better insulated, longer burns","Modern unvented cylinders have lower standing loss and allow longer, more efficient boiler burns → higher effective DHW efficiency than old vented cylinders.",2021,"UK manufacturer/installer technical notes on unvented cylinders"
+S8,"Service/maintenance cost differentials","UK installer experience: combis incur more DHW-side wear (diverter/plate HEX) and more burner/pump cycling due to many small DHW calls → higher annualised maintenance than heat-only/system boilers.",2020-2025,"UK installer experience reports / trade guidance"
