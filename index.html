@@ -113,7 +113,7 @@
     }
     #right {
       display: grid;
-      grid-template-rows: 250px minmax(240px, 1fr);
+      grid-template-rows: 250px minmax(260px, 1fr);
       min-height: 0;
     }
     #top-row {
@@ -175,6 +175,27 @@
       height: 100%;
       display: flex;
       flex-direction: column;
+      gap: .4rem;
+    }
+    /* picture boxes */
+    .picture-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: .4rem;
+    }
+    .pic-box {
+      border: 1px solid #dbeafe;
+      border-radius: .5rem;
+      min-height: 90px;
+      background: #eff6ff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      font-size: .58rem;
+      color: #475569;
+      padding: .25rem;
     }
     #summary-text {
       flex: 1;
@@ -186,7 +207,7 @@
     #summary-disclaimer {
       font-size: .58rem;
       color: #475569;
-      margin-top: .45rem;
+      margin-top: .15rem;
       border-top: 1px solid #e2e8f0;
       padding-top: .3rem;
     }
@@ -261,7 +282,8 @@
         </label>
         <label>
           Hot draws per day
-          <input type="number" id="drawsPerDay" value="20" min="5" max="60" />
+          <input type="number" id="drawsPerDay" value="22" min="5" max="60" />
+          <small style="color:#94a3b8;">Auto-adjusts with occupancy, but you can override.</small>
         </label>
       </div>
 
@@ -356,12 +378,17 @@
       </div>
       <div id="summary">
         <div id="summary-box">
+          <div class="picture-row" id="pictureRow">
+            <div class="pic-box" id="picCurrent">Current system<br><span id="picCurrentLabel"></span></div>
+            <div class="pic-box" id="picA">Option A<br><span id="picALabel"></span></div>
+            <div class="pic-box" id="picB">Option B<br><span id="picBLabel"></span></div>
+          </div>
           <div id="summary-text">
             Summary will appear here.
           </div>
           <div id="summary-disclaimer">
-            This output is indicative only. Installer survey, pipe runs and manufacturer requirements take precedence.
-            Sources: https://github.com/martinbibb-cmd/System-recommendation
+            This illustration is for guidance only and is not financial advice, a quotation, or a substitute for an on-site survey. 
+            Model based on UK domestic usage, installer experience and sources in: https://github.com/martinbibb-cmd/System-recommendation
           </div>
         </div>
       </div>
@@ -416,6 +443,16 @@
       {id:"S8",title:"Service/maintenance cost differentials",desc:"Combis cycle more (DHW) so higher annualised cost"}
     ];
 
+    function getRecommendedDraws(people) {
+      const p = Number(people);
+      if (p <= 1) return 12;
+      if (p === 2) return 18;
+      if (p === 3) return 22;
+      if (p === 4) return 26;
+      if (p === 5) return 30;
+      return 34;
+    }
+
     function getHouseholdWater(beds) {
       const r = systemPerformanceData.find(i => i.category === "occupancy" && i.bedrooms === beds);
       return r ? r.value : 276;
@@ -455,17 +492,17 @@
         const waitSeconds = getCombiWait(houseType);
         dailyWasteL = wastePerDraw * drawsPerDay;
         dailyOverheadKWh = (combiWarmup + combiDump) * drawsPerDay;
-        bullets.push(`Typical combi delay → ${waitSeconds}s to hot water.`);
+        bullets.push(`Delay to hot: about ${waitSeconds}s.`);
         bullets.push(`Water wasted per draw ≈ ${wastePerDraw.toFixed(1)} L → daily ≈ ${dailyWasteL.toFixed(1)} L.`);
-        bullets.push(`Per-draw warm-up + pump overrun ≈ ${dailyOverheadKWh.toFixed(2)} kWh/day.`);
+        bullets.push(`Energy overhead (warm-up + pump overrun) ≈ ${dailyOverheadKWh.toFixed(2)} kWh/day.`);
         if (occupants <= 3 && bathrooms <= 2 && houseType !== "detached") {
           score += 3;
         } else {
-          bullets.push("High demand/simultaneous use: combi may not keep up.");
+          bullets.push("High/simultaneous demand → combi may slow or drop temp.");
           score -= 2;
         }
         if (!isUnvented) {
-          bullets.push("Like-for-like combi is normally lowest capital cost.");
+          bullets.push("Like-for-like combi is usually the lowest install cost.");
           score += 1;
         }
       } else {
@@ -473,16 +510,16 @@
         const waitStored = getStoredWait();
         dailyWasteL = storedWaste * drawsPerDay;
         dailyCylinderLoss = 1.5;
-        bullets.push(`Stored system, tap-to-hot ≈ ${waitStored}s.`);
+        bullets.push(`Tap-to-hot typically ≈ ${waitStored}s.`);
         bullets.push(`Water wasted per draw ≈ ${storedWaste.toFixed(1)} L → daily ≈ ${dailyWasteL.toFixed(1)} L.`);
         bullets.push(`Cylinder standing loss ≈ ${dailyCylinderLoss.toFixed(1)} kWh/day.`);
-        bullets.push("Longer boiler runs → better modulation (≈ +3% effective).");
+        bullets.push("Longer cylinder charge → boiler can modulate efficiently.");
         score += 3;
       }
 
       if (isCurrentOpen && isUnvented) {
         extraCost = 2000;
-        bullets.push("Open-vented → unvented conversion: allow ≈ £2000 extra.");
+        bullets.push("Open vented → unvented conversion: allow ≈ £2000 extra.");
         score -= 1;
       }
 
@@ -494,7 +531,7 @@
       const bedrooms = document.getElementById("bedrooms").value;
       const bathrooms = parseInt(document.getElementById("bathrooms").value, 10);
       const occupants = parseInt(document.getElementById("occupants").value, 10);
-      const drawsPerDay = parseInt(document.getElementById("drawsPerDay").value || "20", 10);
+      const drawsPerDay = parseInt(document.getElementById("drawsPerDay").value || "22", 10);
       const currentBoiler = document.getElementById("currentBoiler").value;
       const currentWater = document.getElementById("currentWater").value;
       const newABoiler = document.getElementById("newABoiler").value;
@@ -502,27 +539,29 @@
       const newBBoiler = document.getElementById("newBBoiler").value;
       const newBWater = document.getElementById("newBWater").value;
 
+      document.getElementById("picCurrentLabel").textContent = `${currentBoiler} + ${currentWater}`;
+      document.getElementById("picALabel").textContent = `${newABoiler} + ${newAWater}`;
+      document.getElementById("picBLabel").textContent = `${newBBoiler} + ${newBWater}`;
+
       const evalA = evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentWater, newBoiler:newABoiler, newWater:newAWater});
       const evalB = evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentWater, newBoiler:newBBoiler, newWater:newBWater});
 
       const bestIsA = evalA.score >= evalB.score;
       const bestTick = document.getElementById("bestTick");
       const secondTick = document.getElementById("secondTick");
-      bestTick.textContent = bestIsA ? "A" : "B";
-      secondTick.textContent = bestIsA ? "B" : "A";
-      bestTick.classList.toggle("active", true);
-      secondTick.classList.toggle("active", false);
+      bestTick.classList.add("active");
+      secondTick.classList.remove("active");
+      bestTick.textContent = "✓";
+      secondTick.textContent = "";
 
-      const makeBox = (label, ev) => {
-        return `
+      const makeBox = (label, ev) => `
 <strong>${label}</strong><br>
-• Daily water wasted: ${ev.dailyWasteL.toFixed(1)} L<br>
+• Daily HW wasted: ${ev.dailyWasteL.toFixed(1)} L<br>
 ${ev.dailyOverheadKWh ? `• DHW overhead: ${ev.dailyOverheadKWh.toFixed(2)} kWh/day<br>` : ""}
 ${ev.dailyCylinderLoss ? `• Cylinder loss: ${ev.dailyCylinderLoss.toFixed(1)} kWh/day<br>` : ""}
 ${ev.extraCost ? `• Extra install: ≈ £${ev.extraCost}<br>` : ""}
-${ev.bullets.map(b => b + "<br>").join("")}
-        `;
-      };
+${ev.bullets.map(b => "• " + b).join("<br>")}
+      `;
 
       const bestBody = document.getElementById("bestBody");
       const secondBody = document.getElementById("secondBody");
@@ -537,21 +576,20 @@ ${ev.bullets.map(b => b + "<br>").join("")}
 
       const dailyWater = getHouseholdWater(bedrooms);
       const localSummary = `
-You told us:
-- ${houseType}, ${bedrooms} bedrooms, ${bathrooms} bathrooms, ${occupants} people
-- Current system: ${currentBoiler} boiler with ${currentWater} hot water
-- Typical total water use for this size: about ${dailyWater} L/day
-- You run about ${drawsPerDay} hot-water draws per day
+You: ${houseType}, ${bedrooms} beds, ${bathrooms} baths, ${occupants} people.
+Current system: ${currentBoiler} boiler with ${currentWater} hot water.
+Typical water for this size: ~${dailyWater} L/day.
+Hot-water draws modelled: ${drawsPerDay} per day.
 
-Solution A (${newABoiler} + ${newAWater}):
-- Wasted hot water: ${evalA.dailyWasteL.toFixed(1)} L per day
-${evalA.dailyOverheadKWh ? `- Combi warm-up/purge energy: ${evalA.dailyOverheadKWh.toFixed(2)} kWh per day\n` : ""}${evalA.dailyCylinderLoss ? `- Cylinder standing loss: ${evalA.dailyCylinderLoss.toFixed(1)} kWh per day\n` : ""}${evalA.extraCost ? `- Extra installation cost expected: ~£${evalA.extraCost}\n` : ""}- Notes: ${evalA.bullets.join("; ")}
+Solution A (${newABoiler} + ${newAWater})
+- Hot-water wasted: ${evalA.dailyWasteL.toFixed(1)} L/day
+${evalA.dailyOverheadKWh ? `- Energy overhead from combi start/stop: ${evalA.dailyOverheadKWh.toFixed(2)} kWh/day\n` : ""}${evalA.dailyCylinderLoss ? `- Cylinder standing loss: ${evalA.dailyCylinderLoss.toFixed(1)} kWh/day\n` : ""}${evalA.extraCost ? `- Extra install allowance: ≈ £${evalA.extraCost}\n` : ""}- Notes: ${evalA.bullets.join("; ")}
 
-Solution B (${newBBoiler} + ${newBWater}):
-- Wasted hot water: ${evalB.dailyWasteL.toFixed(1)} L per day
-${evalB.dailyOverheadKWh ? `- Combi warm-up/purge energy: ${evalB.dailyOverheadKWh.toFixed(2)} kWh per day\n` : ""}${evalB.dailyCylinderLoss ? `- Cylinder standing loss: ${evalB.dailyCylinderLoss.toFixed(1)} kWh per day\n` : ""}${evalB.extraCost ? `- Extra installation cost expected: ~£${evalB.extraCost}\n` : ""}- Notes: ${evalB.bullets.join("; ")}
+Solution B (${newBBoiler} + ${newBWater})
+- Hot-water wasted: ${evalB.dailyWasteL.toFixed(1)} L/day
+${evalB.dailyOverheadKWh ? `- Energy overhead from combi start/stop: ${evalB.dailyOverheadKWh.toFixed(2)} kWh/day\n` : ""}${evalB.dailyCylinderLoss ? `- Cylinder standing loss: ${evalB.dailyCylinderLoss.toFixed(1)} kWh/day\n` : ""}${evalB.extraCost ? `- Extra install allowance: ≈ £${evalB.extraCost}\n` : ""}- Notes: ${evalB.bullets.join("; ")}
 
-Best fit for what you entered: ${bestIsA ? `Solution A` : `Solution B`} (higher score).
+Best match for what you entered: ${bestIsA ? "Solution A" : "Solution B"}.
       `.trim();
 
       let finalSummary = localSummary;
@@ -576,14 +614,24 @@ Best fit for what you entered: ${bestIsA ? `Solution A` : `Solution B`} (higher 
             finalSummary = data.summary;
           }
         }
-      } catch (e) {
-        // ignore, use localSummary
+      } catch(e) {
+        // ignore if API down
       }
 
       document.getElementById("summary-text").textContent = finalSummary;
     }
 
-    document.querySelectorAll("select,input").forEach(el => el.addEventListener("input", render));
+    document.querySelectorAll("select,input").forEach(el => {
+      if (el.id === "occupants") return;
+      el.addEventListener("input", render);
+    });
+
+    document.getElementById("occupants").addEventListener("input", (e) => {
+      const rec = getRecommendedDraws(e.target.value);
+      const draws = document.getElementById("drawsPerDay");
+      draws.value = rec;
+      render();
+    });
 
     document.getElementById("btn-print").addEventListener("click", () => window.print());
     document.getElementById("btn-sources").addEventListener("click", () => {
@@ -631,6 +679,7 @@ Best fit for what you entered: ${bestIsA ? `Solution A` : `Solution B`} (higher 
       URL.revokeObjectURL(url);
     });
 
+    // initial
     render();
   </script>
 </body>
