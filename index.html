@@ -632,6 +632,10 @@
       return type === "combi" || type === "system";
     }
 
+    function waterIsOpenVented(type) {
+      return type === "open_vented" || type === "mixergy_open";
+    }
+
     function getSystemRecommendation(inputs) {
       const eff = SYSTEM_REC_MODELS.efficiency;
       const lon = SYSTEM_REC_MODELS.longevity;
@@ -639,6 +643,9 @@
 
       const occ = inputs.occupants || 2;
       const baths = inputs.bathrooms || 1;
+      const convertToSealed = Boolean(inputs.convertToSealed);
+      const currentIsOpen = waterIsOpenVented(inputs.currentWater);
+      const shouldWarnAboutSealing = convertToSealed || currentIsOpen;
 
       const scores = {
         combi: eff.combi.base,
@@ -674,11 +681,15 @@
         notes.push(txt.combi_small_house);
         notes.push(txt.combi_multi_outlet_limit);
         notes.push(txt.combi_bigger_gas);
-        notes.push(txt.sealed_conversion);
+        if (shouldWarnAboutSealing) {
+          notes.push(txt.sealed_conversion);
+        }
       }
 
       if (bestKey === "system") {
-        notes.push(txt.sealed_conversion);
+        if (shouldWarnAboutSealing) {
+          notes.push(txt.sealed_conversion);
+        }
         if (inputs.keepCylinder) {
           notes.push(txt.cylinder_future);
           notes.push(txt.condensing_eff);
@@ -686,7 +697,7 @@
       }
 
       if (bestKey === "regular") {
-        if (inputs.convertToSealed || boilerImpliesSealed(inputs.wantedType)) {
+        if (convertToSealed || boilerImpliesSealed(inputs.wantedType)) {
           notes.push(txt.sealed_conversion);
         } else {
           notes.push(txt.open_vent_kept);
@@ -829,7 +840,8 @@
         bathrooms,
         keepCylinder,
         convertToSealed,
-        highOutput
+        highOutput,
+        currentWater
       });
 
       const evalA = evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentBoiler, currentWater, newBoiler:newABoiler, newWater:newAWater});
