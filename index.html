@@ -337,6 +337,10 @@
         <div class="metrics-grid" id="metricsGrid"></div>
       </div>
       <div class="panel">
+        <h2>Summary (copy-ready)</h2>
+        <pre class="code" id="summaryText">Fill in the details to generate a summary.</pre>
+      </div>
+      <div class="panel">
         <h2>Raw (for app)</h2>
         <pre class="code" id="rawData"></pre>
       </div>
@@ -598,8 +602,26 @@
 
       const evalA = evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentWater: currentAWater, newBoiler: newABoiler, newWater: newAWater});
       const evalB = evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentWater: currentBWater, newBoiler: newBBoiler, newWater: newBWater});
+      const estimatedHouseholdWater = getHouseholdWaterFromBedrooms(bedrooms);
 
       const best = evalA.score >= evalB.score ? "A" : "B";
+
+      const formatOptionSummary = (label, ev, boiler, water) => {
+        const lines = [
+          `- ${label} (${boiler} + ${water})`,
+          `  • Daily HW waste: ${ev.dailyWasteL.toFixed(1)} L`
+        ];
+        if (ev.dailyOverheadKWh) {
+          lines.push(`  • DHW overhead: ${ev.dailyOverheadKWh.toFixed(2)} kWh/day`);
+        }
+        if (ev.dailyCylinderLoss) {
+          lines.push(`  • Cylinder loss: ${ev.dailyCylinderLoss.toFixed(1)} kWh/day`);
+        }
+        if (ev.extraCost) {
+          lines.push(`  • Extra install: ~£${ev.extraCost}`);
+        }
+        return lines.join("\n");
+      };
 
       const recDiv = document.getElementById("recommendationText");
       recDiv.innerHTML = `
@@ -632,10 +654,33 @@
 
       // metrics
       const metrics = document.getElementById("metricsGrid");
+      const optionAEnergyMetric = evalA.isCombi
+        ? {
+            label: "Option A combi DHW overhead",
+            value: `${evalA.dailyOverheadKWh.toFixed(2)} kWh/day`,
+            detail: `${drawsPerDay} draws`
+          }
+        : {
+            label: "Option A cylinder loss",
+            value: `${evalA.dailyCylinderLoss.toFixed(1)} kWh/day`,
+            detail: "Modern insulated cylinder"
+          };
+      const optionBEnergyMetric = evalB.isCombi
+        ? {
+            label: "Option B combi DHW overhead",
+            value: `${evalB.dailyOverheadKWh.toFixed(2)} kWh/day`,
+            detail: `${drawsPerDay} draws`
+          }
+        : {
+            label: "Option B cylinder loss",
+            value: `${evalB.dailyCylinderLoss.toFixed(1)} kWh/day`,
+            detail: "Modern insulated cylinder"
+          };
+
       metrics.innerHTML = `
         <div class="metric">
           <small>Household water (est.)</small>
-          <strong>${getHouseholdWaterFromBedrooms(bedrooms)} L/day</strong>
+          <strong>${estimatedHouseholdWater} L/day</strong>
           <small>${bedrooms} bed, ${occupants} people</small>
         </div>
         <div class="metric">
@@ -649,16 +694,34 @@
           <small>${newBBoiler} + ${newBWater}</small>
         </div>
         <div class="metric">
-          <small>Combi DHW overhead (A)</small>
-          <strong>${evalA.dailyOverheadKWh.toFixed(2)} kWh/day</strong>
-          <small>${document.getElementById("drawsPerDay").value} draws</small>
+          <small>${optionAEnergyMetric.label}</small>
+          <strong>${optionAEnergyMetric.value}</strong>
+          <small>${optionAEnergyMetric.detail}</small>
         </div>
         <div class="metric">
-          <small>Combi DHW overhead (B)</small>
-          <strong>${evalB.dailyOverheadKWh.toFixed(2)} kWh/day</strong>
-          <small>${document.getElementById("drawsPerDay").value} draws</small>
+          <small>${optionBEnergyMetric.label}</small>
+          <strong>${optionBEnergyMetric.value}</strong>
+          <small>${optionBEnergyMetric.detail}</small>
         </div>
       `;
+
+      const summaryLines = [
+        "Inputs",
+        `- House: ${houseType}, ${bedrooms} bed, ${bathrooms} bath, ${occupants} people`,
+        `- Current A: ${currentABoiler} + ${currentAWater}`,
+        `- Current B: ${currentBBoiler} + ${currentBWater}`,
+        `- Hot draws per day: ${drawsPerDay}`,
+        `- Estimated total water use: ${estimatedHouseholdWater} L/day`,
+        "",
+        "Results",
+        formatOptionSummary("Option A", evalA, newABoiler, newAWater),
+        formatOptionSummary("Option B", evalB, newBBoiler, newBWater),
+        "",
+        "Recommendation",
+        `- Best option: Option ${best}`,
+        "- Moving from open vented to unvented usually adds around £2000 in the UK."
+      ];
+      document.getElementById("summaryText").textContent = summaryLines.join("\n");
 
       document.getElementById("rawData").textContent = JSON.stringify({
         inputs: {
