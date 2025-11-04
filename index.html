@@ -495,6 +495,61 @@
       on_demand: "On demand"
     };
 
+    function togglePanelByHeading(headingText, show) {
+      const selectors = "h1, h2, h3, h4, legend, .section-title, .nav-title, strong";
+      const targetText = headingText.trim().toLowerCase();
+      document.querySelectorAll(selectors).forEach((heading) => {
+        if (!heading.textContent) return;
+        if (heading.textContent.trim().toLowerCase() !== targetText) return;
+
+        const container = heading.closest(".panel, section, .card, .box, div");
+        const displayValue = show ? "" : "none";
+
+        if (container && container !== heading) {
+          container.style.display = displayValue;
+        } else {
+          heading.style.display = displayValue;
+        }
+
+        if (heading.classList && heading.classList.contains("nav-title")) {
+          const siblingPanel = heading.nextElementSibling;
+          if (siblingPanel && siblingPanel.classList.contains("panel")) {
+            siblingPanel.style.display = displayValue;
+          }
+        }
+      });
+    }
+
+    function applySystemRecUI(result, inputs) {
+      togglePanelByHeading("Installation preferences", false);
+      togglePanelByHeading("Mixergy cylinder", false);
+      togglePanelByHeading("Key points", false);
+      togglePanelByHeading("Other sources", false);
+
+      const type = result && result.recommended;
+
+      if (type === "combi") {
+        togglePanelByHeading("Installation preferences", true);
+        togglePanelByHeading("Gas supply / pipe sizing", true);
+      }
+
+      if (type === "system") {
+        togglePanelByHeading("Installation preferences", true);
+      }
+
+      if (type === "mixergy" || (inputs && inputs.keepCylinder)) {
+        togglePanelByHeading("Mixergy cylinder", true);
+      }
+
+      if (type === "regular") {
+        togglePanelByHeading("Installation preferences", false);
+      }
+
+      if (result && Array.isArray(result.notes) && result.notes.length) {
+        togglePanelByHeading("Key points", true);
+      }
+    }
+
     const systemData = {
       combi: {
         baseWaste: {
@@ -793,6 +848,14 @@
         return makeResultCard(opt, why, opt.id === bestId);
       }).join("");
       resultsDiv.innerHTML = recommendationHtml + optionsHtml;
+
+      applySystemRecUI(systemRecommendation, {
+        occupants,
+        bathrooms,
+        keepCylinder,
+        convertToSealed,
+        highOutput
+      });
     }
 
     function makeWhyText(opt, occupants, bathrooms) {
