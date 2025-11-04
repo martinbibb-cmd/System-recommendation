@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>System Recommendation</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --fg: #e2e8f0;
+      --card: #111827;
+      --accent: #38bdf8;
+      --muted: #94a3b8;
+      --danger: #f43f5e;
+      --good: #22c55e;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: .75rem 1rem;
+      background: rgba(15,23,42,.5);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(148,163,184,.1);
+    }
+    header h1 {
+      font-size: 1.1rem;
+      margin: 0;
+    }
+    .btn {
+      background: var(--accent);
+      border: none;
+      color: #0f172a;
+      padding: .4rem .7rem;
+      border-radius: .5rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: .75rem;
+    }
+    .btn.secondary {
+      background: rgba(148,163,184,.08);
+      color: var(--fg);
+      border: 1px solid rgba(148,163,184,.2);
+    }
+    main {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      flex: 1;
+      min-height: 0;
+    }
+    aside {
+      border-right: 1px solid rgba(148,163,184,.08);
+      padding: 1rem;
+      overflow-y: auto;
+      background: radial-gradient(circle at top, rgba(56,189,248,.05), transparent 35%);
+    }
+    section#output {
+      padding: 1rem;
+      overflow-y: auto;
+      background: radial-gradient(circle at top, rgba(244,63,94,.04), transparent 45%);
+    }
+    .panel {
+      background: rgba(15,23,42,.35);
+      border: 1px solid rgba(148,163,184,.08);
+      border-radius: .75rem;
+      padding: .75rem .75rem .25rem;
+      margin-bottom: .75rem;
+    }
+    .panel h2 {
+      font-size: .8rem;
+      margin: 0 0 .5rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--muted);
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: .3rem;
+      font-size: .7rem;
+      margin-bottom: .55rem;
+    }
+    select, input {
+      background: rgba(15,23,42,.35);
+      border: 1px solid rgba(148,163,184,.3);
+      color: var(--fg);
+      border-radius: .4rem;
+      padding: .3rem .35rem;
+      font-size: .7rem;
+    }
+    textarea {
+      width: 100%;
+      background: rgba(15,23,42,.35);
+      border: 1px solid rgba(148,163,184,.3);
+      color: var(--fg);
+      border-radius: .4rem;
+      padding: .4rem;
+      font-size: .7rem;
+      min-height: 120px;
+    }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: .5rem;
+      margin-top: .5rem;
+    }
+    .metric {
+      background: rgba(15,23,42,.35);
+      border: 1px solid rgba(148,163,184,.05);
+      border-radius: .6rem;
+      padding: .4rem .5rem;
+    }
+    .metric small {
+      display: block;
+      font-size: .6rem;
+      color: var(--muted);
+    }
+    .metric strong {
+      font-size: .95rem;
+    }
+    pre.code {
+      background: rgba(15,23,42,.35);
+      border: 1px solid rgba(148,163,184,.08);
+      border-radius: .5rem;
+      padding: .4rem .5rem;
+      font-size: .65rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+      aside {
+        border-right: none;
+        border-bottom: 1px solid rgba(148,163,184,.08);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>System Recommendation</h1>
+    <div>
+      <button class="btn secondary" id="btn-sources">Sources</button>
+      <button class="btn secondary" id="btn-export">Export CSV</button>
+    </div>
+  </header>
+  <main>
+    <aside>
+      <div class="panel">
+        <h2>Property & Occupancy</h2>
+        <label>
+          House type
+          <select id="houseType">
+            <option value="flat/bungalow">Flat / Bungalow</option>
+            <option value="terraced">Terraced</option>
+            <option value="semi">Semi-detached</option>
+            <option value="detached">Detached</option>
+          </select>
+        </label>
+        <label>
+          Bedrooms
+          <select id="bedrooms">
+            <option value="1">1</option>
+            <option value="2-3" selected>2–3</option>
+            <option value="3-4">3–4</option>
+            <option value="4+">4+</option>
+          </select>
+        </label>
+        <label>
+          Occupants
+          <input type="number" id="occupants" min="1" value="3" />
+        </label>
+      </div>
+
+      <div class="panel">
+        <h2>Existing / Proposed</h2>
+        <label>
+          Existing system
+          <select id="existingSystem">
+            <option value="combi">Combi</option>
+            <option value="regular">Regular (open-vent)</option>
+            <option value="system">System / sealed</option>
+            <option value="unvented">Unvented cylinder</option>
+          </select>
+        </label>
+        <label>
+          Proposed system
+          <select id="proposedSystem">
+            <option value="combi">Combi</option>
+            <option value="system">System + cylinder</option>
+            <option value="unvented" selected>Unvented cylinder</option>
+            <option value="regular">Regular (open-vent)</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="panel">
+        <h2>Assumptions</h2>
+        <label>
+          Hot draws per day
+          <input type="number" id="drawsPerDay" value="20" min="5" max="50" />
+        </label>
+        <label>
+          Cylinder insulation (if used)
+          <select id="cylinderInsulation">
+            <option value="modern" selected>Modern (1.5 kWh/day)</option>
+            <option value="old">Old (3.5 kWh/day)</option>
+          </select>
+        </label>
+      </div>
+    </aside>
+
+    <section id="output">
+      <div class="panel">
+        <h2>Recommendation</h2>
+        <div id="recommendationText" style="font-size:.75rem; line-height:1.45;">
+          Select property details to generate a recommendation.
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Real-world metrics</h2>
+        <div class="metrics-grid" id="metricsGrid"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Raw data (for app)</h2>
+        <pre class="code" id="rawData"></pre>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // --- DATA ------------------------------------------------------
+    // This is the same structure we built earlier, collapsed into JS arrays.
+    // You can move this into /data/system_performance_data.json later.
+    const systemPerformanceData = [
+      // occupancy
+      {category:"occupancy",house_type:"all",bedrooms:"1",metric:"household_total_water_use",value:149,units:"L/day",source_id:"S1"},
+      {category:"occupancy",house_type:"all",bedrooms:"2-3",metric:"household_total_water_use",value:276,units:"L/day",source_id:"S1"},
+      {category:"occupancy",house_type:"all",bedrooms:"3-4",metric:"household_total_water_use",value:450,units:"L/day",source_id:"S1"},
+      {category:"hot_water",metric:"hot_water_use_per_dwelling",value:80,units:"L/day",source_id:"S2"},
+      {category:"hot_water",metric:"hot_water_energy",value:4,units:"kWh/day",source_id:"S2"},
+      // combi waste
+      {category:"distribution_waste",system_type:"combi",house_type:"flat/bungalow",metric:"hot_water_waste_per_draw",value:1,units:"L/draw",source_id:"S3"},
+      {category:"distribution_waste",system_type:"combi",house_type:"terraced",metric:"hot_water_waste_per_draw",value:5.5,units:"L/draw",source_id:"S3"},
+      {category:"distribution_waste",system_type:"combi",house_type:"semi",metric:"hot_water_waste_per_draw",value:5.5,units:"L/draw",source_id:"S3"},
+      {category:"distribution_waste",system_type:"combi",house_type:"detached",metric:"hot_water_waste_per_draw",value:8,units:"L/draw",source_id:"S3"},
+      {category:"distribution_waste",system_type:"combi",house_type:"terraced",metric:"hot_water_wait_time",value:45,units:"s",source_id:"S3"},
+      {category:"distribution_waste",system_type:"combi",house_type:"detached",metric:"hot_water_wait_time",value:90,units:"s",source_id:"S3"},
+      // stored
+      {category:"distribution_waste",system_type:"regular/unvented",house_type:"all",metric:"hot_water_waste_per_draw",value:1.5,units:"L/draw",source_id:"S3"},
+      {category:"distribution_waste",system_type:"regular/unvented",house_type:"all",metric:"hot_water_wait_time",value:10,units:"s",source_id:"S3"},
+      // combi losses / cycling
+      {category:"combi_losses",metric:"dhw_startup_loss_per_draw",value:0.025,units:"kWh/draw",source_id:"S4"},
+      {category:"combi_losses",metric:"post_purge_dump_per_draw",value:0.015,units:"kWh/draw",source_id:"S4"},
+      {category:"combi_losses",house_type:"terraced",metric:"dhw_distribution_and_control_losses",value:600,units:"kWh/year",source_id:"S4"},
+      {category:"combi_losses",house_type:"detached",metric:"dhw_distribution_and_control_losses",value:750,units:"kWh/year",source_id:"S4"},
+      // system efficiencies
+      {category:"system_efficiency",system_type:"open_vented",metric:"real_world_efficiency_penalty",value:2,units:"percent",source_id:"S5"},
+      {category:"system_efficiency",system_type:"sealed",metric:"real_world_efficiency_penalty",value:0,units:"percent",source_id:"S5"},
+      {category:"system_efficiency",system_type:"combi",metric:"real_world_dhw_efficiency",value:78,units:"percent",source_id:"S6"},
+      {category:"system_efficiency",system_type:"reg_vented_cyl",metric:"real_world_dhw_efficiency",value:55,units:"percent",source_id:"S6"},
+      {category:"system_efficiency",system_type:"unvented_cyl",metric:"real_world_dhw_efficiency",value:65,units:"percent",source_id:"S7"},
+      {category:"system_efficiency",system_type:"any_cyl",metric:"cylinder_standing_loss_modern",value:1.5,units:"kWh/day",source_id:"S3"},
+      {category:"system_efficiency",system_type:"old_vented_cyl",metric:"cylinder_standing_loss_old",value:3.5,units:"kWh/day",source_id:"S3"},
+      // modulation benefit
+      {category:"modulation_benefit",system_type:"regular/unvented",metric:"boiler_effective_efficiency_gain_vs_short_draws",value:3,units:"percent",source_id:"S7"},
+      {category:"modulation_benefit",system_type:"combi",metric:"boiler_effective_efficiency_drop_vs_long_burns",value:3,units:"percent",source_id:"S4"},
+      // ongoing costs
+      {category:"ongoing_costs",system_type:"system",metric:"annualised_extra_service_cost",value:20,units:"GBP/year",source_id:"S8"},
+      {category:"ongoing_costs",system_type:"combi",metric:"annualised_extra_service_cost",value:50,units:"GBP/year",source_id:"S8"}
+    ];
+
+    const sources = [
+      {id:"S1",title:"UK household water use figures",desc:"149 L/day single, 276 L/day two-person, ~450 L/day four-person"},
+      {id:"S2",title:"UK domestic hot water ~4 kWh/day",desc:"~80 L at 55°C per dwelling"},
+      {id:"S3",title:"Combi hot water delivery/waste",desc:"5–8 L/draw and 30–90 s for distant taps; cylinders ~1–2 L"},
+      {id:"S4",title:"SAP/field combi DHW loss allowance",desc:"~600 kWh/yr + per-draw warm-up and post-purge dumping"},
+      {id:"S5",title:"Open-vented vs sealed heating efficiency",desc:"Open-vent loses via F&E; sealed avoids it"},
+      {id:"S6",title:"Field efficiencies combi vs cylinder",desc:"Combis 75–82%, cylinders 30–70% depending on standing loss"},
+      {id:"S7",title:"Unvented cylinders better insulated, longer burns",desc:"Long charge -> better modulation -> higher effective DHW efficiency"},
+      {id:"S8",title:"Service/maintenance cost differentials",desc:"Combis cycle more (DHW) so higher annualised cost"}
+    ];
+
+    // --- HELPERS ---------------------------------------------------
+    function getHouseWater(houseType, bedrooms) {
+      // fall back to occupancy table
+      const match = systemPerformanceData.find(r =>
+        r.category === "occupancy" &&
+        r.bedrooms === bedrooms
+      );
+      return match ? match.value : 276;
+    }
+
+    function getCombiWaste(houseType) {
+      const match = systemPerformanceData.find(r =>
+        r.category === "distribution_waste" &&
+        r.system_type === "combi" &&
+        r.house_type === houseType &&
+        r.metric === "hot_water_waste_per_draw"
+      );
+      return match ? match.value : 5.5;
+    }
+
+    function getCombiWait(houseType) {
+      const match = systemPerformanceData.find(r =>
+        r.category === "distribution_waste" &&
+        r.system_type === "combi" &&
+        r.house_type === houseType &&
+        r.metric === "hot_water_wait_time"
+      );
+      return match ? match.value : 45;
+    }
+
+    function getStoredWaste() {
+      const match = systemPerformanceData.find(r =>
+        r.category === "distribution_waste" &&
+        r.system_type === "regular/unvented" &&
+        r.metric === "hot_water_waste_per_draw"
+      );
+      return match ? match.value : 1.5;
+    }
+
+    function getStoredWait() {
+      const match = systemPerformanceData.find(r =>
+        r.category === "distribution_waste" &&
+        r.system_type === "regular/unvented" &&
+        r.metric === "hot_water_wait_time"
+      );
+      return match ? match.value : 10;
+    }
+
+    function synthesizeRecommendation({houseType, bedrooms, occupants, existingSystem, proposedSystem, drawsPerDay, cylinderInsulation}) {
+      const dailyHW = 80; // default
+      const combiWastePerDraw = getCombiWaste(houseType);
+      const combiWait = getCombiWait(houseType);
+      const storedWaste = getStoredWaste();
+      const storedWait = getStoredWait();
+
+      const combiWarmup = 0.025; // kWh
+      const combiDump = 0.015; // kWh
+      const combiOverheadDaily = (combiWarmup + combiDump) * drawsPerDay;
+
+      const cylinderLoss = (cylinderInsulation === "modern") ? 1.5 : 3.5; // kWh/day
+
+      // simple logic:
+      let headline = "";
+      let rationale = [];
+
+      const highOccupancy = occupants >= 4 || bedrooms === "3-4" || bedrooms === "4+";
+      const longRuns = (houseType === "semi" || houseType === "detached");
+
+      if (proposedSystem === "combi") {
+        if (highOccupancy && longRuns) {
+          headline = "Combi will work, but expect noticeable water & energy waste on DHW.";
+          rationale.push("Long pipe runs in " + houseType + " plus multiple daily draws means 5–8 L of water and 30–90 s wait per hot use.");
+          rationale.push("Per-draw warm-up and pump overrun add ~" + combiOverheadDaily.toFixed(2) + " kWh/day of overhead, similar to SAP’s ~600 kWh/yr allowance when annualised.");
+          rationale.push("Ongoing costs will be a bit higher than a system + cylinder due to DHW cycling.");
+        } else {
+          headline = "Combi is suitable for this occupancy.";
+          rationale.push("Lower draw count keeps combi overhead down.");
+          rationale.push("Consider a flow-restricting/combisave device to reduce 5–6 L typical waste per draw.");
+        }
+      } else {
+        // system / unvented / regular
+        headline = "Stored hot water is appropriate for this property.";
+        rationale.push("Cylinder allows the boiler to run for longer, modulate, and stay in its condensing band → ~3% effective gain vs lots of short combi DHW burns.");
+        rationale.push("Tap-to-hot wait ~" + storedWait + " s and only ~" + storedWaste + " L wasted per draw if cylinder is sited centrally.");
+        rationale.push("Daily cylinder loss about " + cylinderLoss + " kWh/day (" + cylinderInsulation + ").");
+      }
+
+      // service cost note for combi
+      if (proposedSystem === "combi") {
+        rationale.push("Plan for slightly higher annual service/parts (£50+/yr) due to plate HEX / diverter wear.");
+      }
+
+      return {headline, rationale, combiWastePerDraw, combiWait, storedWaste, storedWait, combiOverheadDaily, cylinderLoss};
+    }
+
+    function render() {
+      const houseType = document.getElementById("houseType").value;
+      const bedrooms = document.getElementById("bedrooms").value;
+      const occupants = parseInt(document.getElementById("occupants").value || "1", 10);
+      const existingSystem = document.getElementById("existingSystem").value;
+      const proposedSystem = document.getElementById("proposedSystem").value;
+      const drawsPerDay = parseInt(document.getElementById("drawsPerDay").value || "20", 10);
+      const cylinderInsulation = document.getElementById("cylinderInsulation").value;
+
+      const rec = synthesizeRecommendation({houseType, bedrooms, occupants, existingSystem, proposedSystem, drawsPerDay, cylinderInsulation});
+
+      // recommendation
+      const recDiv = document.getElementById("recommendationText");
+      recDiv.innerHTML = `
+        <strong>${rec.headline}</strong><br>
+        <ul style="margin:.4rem 0 .2rem 1.1rem; padding:0; font-size:.7rem;">
+          ${rec.rationale.map(r => `<li>${r}</li>`).join("")}
+        </ul>
+      `;
+
+      // metrics
+      const metrics = document.getElementById("metricsGrid");
+      metrics.innerHTML = `
+        <div class="metric">
+          <small>Combi waste per draw</small>
+          <strong>${rec.combiWastePerDraw.toFixed(1)} L</strong>
+          <small>${houseType}</small>
+        </div>
+        <div class="metric">
+          <small>Combi wait</small>
+          <strong>${rec.combiWait} s</strong>
+          <small>includes burner warm-up</small>
+        </div>
+        <div class="metric">
+          <small>Stored waste per draw</small>
+          <strong>${rec.storedWaste.toFixed(1)} L</strong>
+          <small>cylinder central</small>
+        </div>
+        <div class="metric">
+          <small>Combi DHW overhead</small>
+          <strong>${rec.combiOverheadDaily.toFixed(2)} kWh/day</strong>
+          <small>(${document.getElementById("drawsPerDay").value} draws)</small>
+        </div>
+        <div class="metric">
+          <small>Cylinder standing loss</small>
+          <strong>${rec.cylinderLoss} kWh/day</strong>
+          <small>${cylinderInsulation}</small>
+        </div>
+      `;
+
+      // raw
+      const raw = {
+        inputs: {houseType, bedrooms, occupants, existingSystem, proposedSystem, drawsPerDay, cylinderInsulation},
+        outputs: rec
+      };
+      document.getElementById("rawData").textContent = JSON.stringify(raw, null, 2);
+    }
+
+    // --- EVENTS ----------------------------------------------------
+    document.querySelectorAll("select,input").forEach(el => {
+      el.addEventListener("input", render);
+    });
+
+    document.getElementById("btn-sources").addEventListener("click", () => {
+      // you said: "Sources are in the existing repo"
+      // so we just point there
+      window.open("https://github.com/martinbibb-cmd/System-recommendation", "_blank");
+    });
+
+    document.getElementById("btn-export").addEventListener("click", () => {
+      // export the inlined data as CSV
+      const headers = ["category","sub_category","system_type","house_type","bedrooms","metric","value","units","source_id","notes"];
+      const lines = [headers.join(",")];
+      systemPerformanceData.forEach(row => {
+        const line = [
+          row.category || "",
+          row.sub_category || "",
+          row.system_type || "",
+          row.house_type || "",
+          row.bedrooms || "",
+          row.metric || "",
+          row.value !== undefined ? row.value : "",
+          row.units || "",
+          row.source_id || "",
+          row.notes || ""
+        ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(",");
+        lines.push(line);
+      });
+      const blob = new Blob([lines.join("\n")], {type: "text/csv"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "system_performance_data.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // initial render
+    render();
+  </script>
+</body>
+</html>
