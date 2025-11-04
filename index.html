@@ -511,17 +511,20 @@
       return r ? r.value : 10;
     }
 
+    const CACHE_BUSTER = "v=20240604";
+    const withCacheBuster = (path) => `${path}?${CACHE_BUSTER}`;
+
     const boilerDiagramMap = {
       regular: {
-        src: "./Data/Open-vented-schematic.jpeg",
+        src: withCacheBuster("./Data/Open-vented-schematic.jpeg"),
         alt: "Open vented regular boiler schematic"
       },
       system: {
-        src: "./Data/System-boiler.png",
+        src: withCacheBuster("./Data/System-boiler.png"),
         alt: "System boiler schematic"
       },
       combi: {
-        src: "./Data/Combination.png",
+        src: withCacheBuster("./Data/Combination.png"),
         alt: "Combination (combi) boiler schematic"
       }
     };
