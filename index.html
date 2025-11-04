@@ -484,6 +484,26 @@
       return r ? r.value : 10;
     }
 
+    const boilerLabels = {
+      regular: "Regular boiler",
+      system: "System boiler",
+      combi: "Combi boiler"
+    };
+    const waterLabels = {
+      open_vented: "Open vented hot water",
+      mixergy_open: "Mixergy open vented hot water",
+      unvented: "Unvented hot water",
+      mixergy_unvented: "Mixergy unvented hot water",
+      thermal_store: "Thermal store",
+      on_demand: "On-demand hot water"
+    };
+
+    function formatSystemLabel(boiler, water) {
+      const b = boilerLabels[boiler] || boiler;
+      const w = waterLabels[water] || water;
+      return `${b} with ${w}`;
+    }
+
     function evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentWater, newBoiler, newWater}) {
       const combiWarmup = 0.025;
       const combiDump = 0.015;
@@ -549,9 +569,9 @@
       const newBBoiler = document.getElementById("newBBoiler").value;
       const newBWater = document.getElementById("newBWater").value;
 
-      document.getElementById("picCurrentLabel").textContent = `${currentBoiler} + ${currentWater}`;
-      document.getElementById("picALabel").textContent = `${newABoiler} + ${newAWater}`;
-      document.getElementById("picBLabel").textContent = `${newBBoiler} + ${newBWater}`;
+      document.getElementById("picCurrentLabel").textContent = formatSystemLabel(currentBoiler, currentWater);
+      document.getElementById("picALabel").textContent = formatSystemLabel(newABoiler, newAWater);
+      document.getElementById("picBLabel").textContent = formatSystemLabel(newBBoiler, newBWater);
 
       const evalA = evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentWater, newBoiler:newABoiler, newWater:newAWater});
       const evalB = evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentWater, newBoiler:newBBoiler, newWater:newBWater});
@@ -577,25 +597,25 @@ ${ev.bullets.map(b => "• " + b).join("<br>")}
       const secondBody = document.getElementById("secondBody");
 
       if (bestIsA) {
-        bestBody.innerHTML = makeBox(`Solution A: ${newABoiler} + ${newAWater}`, evalA);
-        secondBody.innerHTML = makeBox(`Solution B: ${newBBoiler} + ${newBWater}`, evalB);
+        bestBody.innerHTML = makeBox(`Solution A: ${formatSystemLabel(newABoiler, newAWater)}`, evalA);
+        secondBody.innerHTML = makeBox(`Solution B: ${formatSystemLabel(newBBoiler, newBWater)}`, evalB);
       } else {
-        bestBody.innerHTML = makeBox(`Solution B: ${newBBoiler} + ${newBWater}`, evalB);
-        secondBody.innerHTML = makeBox(`Solution A: ${newABoiler} + ${newAWater}`, evalA);
+        bestBody.innerHTML = makeBox(`Solution B: ${formatSystemLabel(newBBoiler, newBWater)}`, evalB);
+        secondBody.innerHTML = makeBox(`Solution A: ${formatSystemLabel(newABoiler, newAWater)}`, evalA);
       }
 
       const dailyWater = getHouseholdWater(bedrooms);
       const localSummary = `
 You: ${houseType}, ${bedrooms} beds, ${bathrooms} baths, ${occupants} people.
-Current system: ${currentBoiler} boiler with ${currentWater} hot water.
+Current system: ${formatSystemLabel(currentBoiler, currentWater)}.
 Typical water for this size: ~${dailyWater} L/day.
 Hot-water draws modelled: ${drawsPerDay} per day.
 
-Solution A (${newABoiler} + ${newAWater})
+Solution A (${formatSystemLabel(newABoiler, newAWater)})
 - Hot-water wasted: ${evalA.dailyWasteL.toFixed(1)} L/day
 ${evalA.dailyOverheadKWh ? `- Energy overhead from combi start/stop: ${evalA.dailyOverheadKWh.toFixed(2)} kWh/day\n` : ""}${evalA.dailyCylinderLoss ? `- Cylinder standing loss: ${evalA.dailyCylinderLoss.toFixed(1)} kWh/day\n` : ""}${evalA.extraCost ? `- Extra install allowance: ≈ £${evalA.extraCost}\n` : ""}- Notes: ${evalA.bullets.join("; ")}
 
-Solution B (${newBBoiler} + ${newBWater})
+Solution B (${formatSystemLabel(newBBoiler, newBWater)})
 - Hot-water wasted: ${evalB.dailyWasteL.toFixed(1)} L/day
 ${evalB.dailyOverheadKWh ? `- Energy overhead from combi start/stop: ${evalB.dailyOverheadKWh.toFixed(2)} kWh/day\n` : ""}${evalB.dailyCylinderLoss ? `- Cylinder standing loss: ${evalB.dailyCylinderLoss.toFixed(1)} kWh/day\n` : ""}${evalB.extraCost ? `- Extra install allowance: ≈ £${evalB.extraCost}\n` : ""}- Notes: ${evalB.bullets.join("; ")}
 
