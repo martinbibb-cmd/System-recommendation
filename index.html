@@ -529,76 +529,40 @@
 
     const SYSTEM_REC_MODELS = {
       meta: {
-        version: "1.0",
-        description: "Offline reasoning weights and advisories for System Recommendation 2.0"
+        version: "1.1",
+        description: "Conditional notes for system recommendations"
       },
       efficiency: {
-        combi: {
-          base: 0.90,
-          lowOccupancyBonus: 0.05,
-          highUsagePenalty: -0.20,
-          notes: [
-            "Best for 1–2 person households or single-outlet use.",
-            "Efficiency drops with long or simultaneous draws."
-          ]
-        },
-        system: {
-          base: 0.94,
-          stable: true,
-          notes: [
-            "Maintains condensing operation under load.",
-            "Better for larger households / multiple bathrooms."
-          ]
-        },
-        regular: {
-          base: 0.93,
-          legacy: true,
-          notes: [
-            "Best retained when existing vented cylinder is serviceable.",
-            "Can be converted to sealed later if required."
-          ]
-        },
-        mixergy: {
-          base: 0.94,
-          futureReady: true,
-          pvCompatible: true,
-          notes: [
-            "Can be partially heated for efficiency.",
-            "Convertible to heat pump or PV-linked operation."
-          ]
-        }
+        combi: { base: 0.90, lowOccupancyBonus: 0.05, highUsagePenalty: -0.20 },
+        system: { base: 0.94 },
+        regular: { base: 0.93 },
+        mixergy: { base: 0.94 }
       },
       longevity: {
         combi: 0.9,
         system: 1.1,
         regular: 1.0,
-        mixergy: 1.3,
-        factors: [
-          "Cylinder retained → improves future upgrade options.",
-          "Stored water gives immersion backup and PV integration."
-        ]
+        mixergy: 1.3
       },
-      risks: {
-        sealedConversion: "Increased pressure can expose minor leaks; expansion kit required.",
-        combiTapLimit: "Combi gives hot-water priority – limited multi-outlet use.",
-        gasUpgrade: "High-output combis may require upsized gas pipe to meter.",
-        condensate: "External runs must be insulated or pumped to avoid freezing.",
-        electrical: "Immersion / Mixergy may require dedicated supply."
-      },
-      advice: {
-        CA01: "Advised: A combi is most efficient for small households using one outlet at a time.",
-        CA02: "Advised: Retaining a cylinder allows future upgrade to heat pump or solar PV.",
-        CA03: "Advised: Sealing system may reveal existing leaks in older pipework.",
-        CA04: "Advised: Gas pipe may need upsizing for larger boilers.",
-        CA05: "Advised: Condensing efficiency around 94% when correctly set up."
+      text: {
+        combi_small_house: "Combi is suitable for smaller households using one outlet at a time.",
+        combi_multi_outlet_limit: "Combi hot water is priority-fed – running more than one outlet will reduce flow/temperature.",
+        combi_bigger_gas: "Combi will require a larger gas supply than a typical 15 kW regular boiler.",
+        sealed_conversion: "Sealing the system can expose existing weeps/leaks in older pipework and radiators.",
+        cylinder_future: "Keeping a cylinder supports future heat pump or solar PV options and gives immersion back-up.",
+        condensing_eff: "System/cylinder setups keep efficiency close to 94% in real use.",
+        open_vent_kept: "Regular boiler retains open-vented arrangement (no new sealed components) unless specified."
       }
     };
+
+    function boilerImpliesSealed(type) {
+      return type === "combi" || type === "system";
+    }
 
     function getSystemRecommendation(inputs) {
       const eff = SYSTEM_REC_MODELS.efficiency;
       const lon = SYSTEM_REC_MODELS.longevity;
-      const risks = SYSTEM_REC_MODELS.risks;
-      const advice = SYSTEM_REC_MODELS.advice;
+      const txt = SYSTEM_REC_MODELS.text;
 
       const occ = inputs.occupants || 2;
       const baths = inputs.bathrooms || 1;
@@ -624,37 +588,57 @@
         scores.regular *= lon.regular;
       }
 
-      const bestKey = Object.keys(scores).sort((a, b) => scores[b] - scores[a])[0];
+      let bestKey;
+      if (inputs.wantedType && scores[inputs.wantedType] !== undefined) {
+        bestKey = inputs.wantedType;
+      } else {
+        bestKey = Object.keys(scores).sort((a, b) => scores[b] - scores[a])[0];
+      }
 
       const notes = [];
 
       if (bestKey === "combi") {
-        notes.push(eff.combi.notes[0], advice.CA01);
-        if (occ > 2 || baths > 1) {
-          notes.push(risks.combiTapLimit);
+        notes.push(txt.combi_small_house);
+        notes.push(txt.combi_multi_outlet_limit);
+        notes.push(txt.combi_bigger_gas);
+        notes.push(txt.sealed_conversion);
+      }
+
+      if (bestKey === "system") {
+        notes.push(txt.sealed_conversion);
+        if (inputs.keepCylinder) {
+          notes.push(txt.cylinder_future);
+          notes.push(txt.condensing_eff);
         }
       }
-      if (bestKey === "system" || bestKey === "regular" || bestKey === "mixergy") {
-        notes.push(advice.CA02, advice.CA05);
+
+      if (bestKey === "regular") {
+        if (inputs.convertToSealed || boilerImpliesSealed(inputs.wantedType)) {
+          notes.push(txt.sealed_conversion);
+        } else {
+          notes.push(txt.open_vent_kept);
+        }
       }
+
       if (bestKey === "mixergy") {
-        notes.push(risks.electrical);
+        notes.push(txt.cylinder_future);
+        notes.push(txt.condensing_eff);
       }
-      if (inputs.convertToSealed) {
-        notes.push(risks.sealedConversion, advice.CA03);
+
+      if (inputs.highOutput && bestKey !== "combi") {
+        notes.push("This appliance size may require upsizing the gas pipe back to the meter.");
       }
-      if (inputs.highOutput) {
-        notes.push(risks.gasUpgrade, advice.CA04);
-      }
-      if (!inputs.keepCylinder && bestKey === "combi") {
-        notes.push("Note: removing storage reduces future heat pump / PV options.");
-      }
+
+      const alternatives = Object.fromEntries(
+        Object.entries(scores).filter(([key]) => key !== bestKey)
+      );
 
       return {
         recommended: bestKey,
         score: scores[bestKey],
-        alternatives: Object.fromEntries(Object.entries(scores).filter(([k]) => k !== bestKey)),
-        notes
+        alternatives,
+        notes,
+        rawScores: scores
       };
     }
 
