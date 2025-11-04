@@ -396,6 +396,108 @@
       {id:"S8",title:"Service/maintenance cost differentials",desc:"Combis cycle more (DHW) so higher annualised cost"}
     ];
 
+    function buildDataCSV() {
+      const headers = ["category","sub_category","system_type","house_type","bedrooms","metric","value","units","source_id","notes"];
+      const lines = [headers.join(",")];
+      systemPerformanceData.forEach(row => {
+        const line = [
+          row.category || "",
+          row.sub_category || "",
+          row.system_type || "",
+          row.house_type || "",
+          row.bedrooms || "",
+          row.metric || "",
+          row.value !== undefined ? row.value : "",
+          row.units || "",
+          row.source_id || "",
+          row.notes || ""
+        ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(",");
+        lines.push(line);
+      });
+      return lines.join("\n");
+    }
+
+    function buildSourcesCSV() {
+      const headers = ["source_id","reference_title","description"];
+      const lines = [headers.join(",")];
+      sources.forEach(s => {
+        const line = [
+          `"${s.id}"`,
+          `"${(s.title || "").replace(/"/g,'""')}"`,
+          `"${(s.desc || s.description || "").replace(/"/g,'""')}"`
+        ].join(",");
+        lines.push(line);
+      });
+      return lines.join("\n");
+    }
+
+    async function ensureCsv(fileName, fallbackBuilder) {
+      try {
+        const res = await fetch(fileName, {cache: "no-store"});
+        if (!res.ok) throw new Error("not ok");
+      } catch (err) {
+        const csvText = fallbackBuilder();
+        const blob = new Blob([csvText], {type: "text/csv"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        a.style.display = "none";
+        document.body.appendChild(a);
+        createCsvStrip(fileName, csvText, url);
+      }
+    }
+
+    function createCsvStrip(fileName, csvText, url) {
+      let bar = document.getElementById("sr-csv-strip");
+      if (!bar) {
+        bar = document.createElement("div");
+        bar.id = "sr-csv-strip";
+        bar.style.position = "fixed";
+        bar.style.bottom = "1rem";
+        bar.style.right = "1rem";
+        bar.style.background = "#0f172a";
+        bar.style.color = "#fff";
+        bar.style.padding = "0.5rem 0.75rem";
+        bar.style.borderRadius = "0.5rem";
+        bar.style.fontSize = "0.7rem";
+        bar.style.boxShadow = "0 10px 25px rgba(15,23,42,.25)";
+        bar.textContent = "CSV fallback created:";
+        document.body.appendChild(bar);
+      }
+      const btnDl = document.createElement("button");
+      btnDl.textContent = "Download " + fileName;
+      btnDl.style.marginLeft = "0.5rem";
+      btnDl.style.background = "#38bdf8";
+      btnDl.style.border = "none";
+      btnDl.style.color = "#0f172a";
+      btnDl.style.borderRadius = "0.35rem";
+      btnDl.style.cursor = "pointer";
+      btnDl.style.fontWeight = "600";
+      btnDl.onclick = () => {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        a.click();
+      };
+      const btnPrint = document.createElement("button");
+      btnPrint.textContent = "Print " + fileName;
+      btnPrint.style.marginLeft = "0.5rem";
+      btnPrint.style.background = "rgba(255,255,255,.1)";
+      btnPrint.style.border = "1px solid rgba(255,255,255,.2)";
+      btnPrint.style.color = "#fff";
+      btnPrint.style.borderRadius = "0.35rem";
+      btnPrint.style.cursor = "pointer";
+      btnPrint.onclick = () => {
+        const w = window.open("", "_blank");
+        w.document.write("<pre>" + csvText.replace(/</g,"&lt;") + "</pre>");
+        w.document.close();
+      };
+      bar.appendChild(document.createElement("br"));
+      bar.appendChild(btnDl);
+      bar.appendChild(btnPrint);
+    }
+
     function getCombiWaste(houseType) {
       const m = systemPerformanceData.find(r => r.category==="distribution_waste" && r.system_type==="combi" && r.house_type===houseType);
       return m ? m.value : 5.5;
@@ -621,7 +723,11 @@
       const headers = ["source_id","reference_title","description"];
       const lines = [headers.join(",")];
       sources.forEach(s => {
-        const line = [`"${s.id}"`, `"${s.title.replace(/"/g,'""')}"`, `"${s.desc.replace(/"/g,'""')}"`].join(",");
+        const line = [
+          `"${s.id}"`,
+          `"${(s.title || "").replace(/"/g,'""')}"`,
+          `"${((s.desc || s.description || "").replace(/"/g,'""'))}"`
+        ].join(",");
         lines.push(line);
       });
       const blob = new Blob([lines.join("\n")], {type:"text/csv"});
@@ -634,6 +740,11 @@
     });
 
     render();
+
+    document.addEventListener("DOMContentLoaded", () => {
+      ensureCsv("system_performance_data.csv", buildDataCSV);
+      ensureCsv("sources.csv", buildSourcesCSV);
+    });
   </script>
 </body>
 </html>
