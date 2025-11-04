@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>System Recommendation</title>
+  <title>Which system is best for you?</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     :root {
@@ -25,114 +25,122 @@
       flex-direction: column;
     }
     header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: .75rem;
-      padding: .75rem 1rem;
-      background: #ffffff;
+      padding: .75rem 1rem .5rem;
+      text-align: center;
+      background: #fff;
       border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 50;
+      position: relative;
     }
     header h1 {
-      font-size: 1rem;
       margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    header small {
+      display: block;
+      margin-top: .25rem;
+      color: var(--muted);
+      font-size: .63rem;
+    }
+    .top-actions {
+      position: absolute;
+      right: 1rem;
+      top: .55rem;
+      display: flex;
+      gap: .4rem;
     }
     .btn {
       background: var(--accent);
       border: none;
       color: #fff;
-      padding: .4rem .7rem;
+      padding: .35rem .6rem;
       border-radius: .5rem;
+      font-size: .63rem;
       font-weight: 600;
       cursor: pointer;
-      font-size: .7rem;
-      white-space: nowrap;
     }
     .btn.secondary {
-      background: #ffffff;
+      background: #fff;
       border: 1px solid var(--border);
-      color: var(--fg);
+      color: #0f172a;
     }
     main {
       display: grid;
-      grid-template-columns: 380px 1fr;
+      grid-template-columns: 270px minmax(0, 1fr);
       flex: 1;
       min-height: 0;
     }
     aside {
       border-right: 1px solid var(--border);
-      padding: 1rem;
-      overflow-y: auto;
       background: #f1f5f9;
-    }
-    section#output {
-      padding: 1rem;
+      padding: .5rem .5rem 3rem;
       overflow-y: auto;
     }
-    .panel {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: .75rem;
-      padding: .75rem .75rem .35rem;
-      margin-bottom: .75rem;
-    }
-    .panel h2 {
-      font-size: .8rem;
-      margin: 0 0 .5rem;
+    .nav-title {
+      font-size: .7rem;
       text-transform: uppercase;
       letter-spacing: .04em;
-      color: var(--muted);
+      margin: .5rem 0 .25rem;
+      color: #475569;
+    }
+    .panel {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: .6rem;
+      margin-bottom: .5rem;
+      padding: .5rem .5rem .25rem;
+    }
+    .panel h2 {
+      font-size: .7rem;
+      margin: 0 0 .35rem;
+      color: #1f2937;
     }
     label {
       display: flex;
       flex-direction: column;
-      gap: .25rem;
-      font-size: .7rem;
-      margin-bottom: .5rem;
+      gap: .2rem;
+      font-size: .65rem;
+      margin-bottom: .35rem;
     }
     select, input {
       background: #fff;
       border: 1px solid var(--border);
-      color: var(--fg);
       border-radius: .4rem;
-      padding: .3rem .35rem;
-      font-size: .7rem;
+      padding: .25rem .35rem;
+      font-size: .65rem;
+      color: #0f172a;
     }
-    .two-col {
+    #right {
+      display: grid;
+      grid-template-rows: 250px minmax(240px, 1fr);
+      min-height: 0;
+    }
+    #top-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: .5rem;
+      padding: .5rem;
+      min-height: 0;
     }
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: .5rem;
-      margin-top: .5rem;
-    }
-    .metric {
-      background: #eff6ff;
-      border: 1px solid #dbeafe;
+    .choice-box {
+      background: #fff;
+      border: 1px solid var(--border);
       border-radius: .6rem;
-      padding: .4rem .5rem;
-    }
-    .metric small {
-      display: block;
-      font-size: .6rem;
-      color: var(--muted);
-    }
-    .metric strong {
-      font-size: .9rem;
-    }
-    .result-row {
+      padding: .4rem .4rem .1rem;
       display: flex;
-      gap: .6rem;
-      align-items: flex-start;
-      margin-bottom: .5rem;
-      border-bottom: 1px solid #e2e8f0;
-      padding-bottom: .5rem;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .choice-head {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      margin-bottom: .4rem;
+    }
+    .choice-head h3 {
+      font-size: .73rem;
+      margin: 0;
     }
     .tick {
       width: 1.1rem;
@@ -143,50 +151,76 @@
       align-items: center;
       justify-content: center;
       font-size: .7rem;
+      flex: 0 0 auto;
     }
     .tick.active {
       background: #dcfce7;
       color: #166534;
       border: 1px solid #22c55e;
     }
-    pre.code {
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: .5rem;
-      padding: .4rem .5rem;
+    .choice-body {
+      flex: 1;
+      overflow-y: auto;
       font-size: .65rem;
-      overflow-x: auto;
+      line-height: 1.4;
+    }
+    #summary {
+      padding: .5rem;
+    }
+    #summary-box {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: .6rem;
+      padding: .6rem .6rem .35rem;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    #summary-text {
+      flex: 1;
+      overflow-y: auto;
+      font-size: .68rem;
+      line-height: 1.4;
       white-space: pre-wrap;
-      word-break: break-word;
     }
-    @media (max-width: 980px) {
+    #summary-disclaimer {
+      font-size: .58rem;
+      color: #475569;
+      margin-top: .45rem;
+      border-top: 1px solid #e2e8f0;
+      padding-top: .3rem;
+    }
+    @media (max-width: 950px) {
       main { grid-template-columns: 1fr; }
-      aside { border-right: none; border-bottom: 1px solid var(--border); }
-      header { flex-wrap: wrap; }
+      #right { grid-template-rows: auto auto; }
+      #top-row { grid-template-columns: 1fr; }
+      .top-actions { position: static; justify-content: center; margin-top: .4rem; }
+      header { padding-top: 2.2rem; }
     }
-    /* print */
     @media print {
-      header, aside .panel:last-child button { display: none !important; }
+      header, aside, #top-row, .top-actions { display: none !important; }
       main { grid-template-columns: 1fr !important; }
+      #summary { padding: 0; }
+      #summary-box { border: none; }
       body { background: #fff; }
-      section#output { background: #fff; }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>System Recommendation</h1>
-    <div style="display:flex; gap:.5rem;">
+    <div class="top-actions">
       <button class="btn secondary" id="btn-sources">Sources</button>
-      <button class="btn secondary" id="btn-export-data">Download data CSV</button>
-      <button class="btn secondary" id="btn-export-sources">Download sources CSV</button>
+      <button class="btn secondary" id="btn-export-data">Data CSV</button>
+      <button class="btn secondary" id="btn-export-sources">Sources CSV</button>
       <button class="btn" id="btn-print">Print / PDF</button>
     </div>
+    <h1>Which system is best for you?</h1>
+    <small>Compare two potential upgrades against your current UK setup.</small>
   </header>
   <main>
     <aside>
+      <div class="nav-title">About you</div>
       <div class="panel">
-        <h2>Property</h2>
         <label>
           House type
           <select id="houseType">
@@ -196,26 +230,24 @@
             <option value="detached">Detached</option>
           </select>
         </label>
-        <div class="two-col">
-          <label>
-            Bedrooms
-            <select id="bedrooms">
-              <option>1</option>
-              <option>2</option>
-              <option selected>3</option>
-              <option>4</option>
-              <option>5</option>
-            </select>
-          </label>
-          <label>
-            Bathrooms
-            <select id="bathrooms">
-              <option>1</option>
-              <option selected>2</option>
-              <option>3</option>
-            </select>
-          </label>
-        </div>
+        <label>
+          Bedrooms
+          <select id="bedrooms">
+            <option>1</option>
+            <option>2</option>
+            <option selected>3</option>
+            <option>4</option>
+            <option>5</option>
+          </select>
+        </label>
+        <label>
+          Bathrooms
+          <select id="bathrooms">
+            <option>1</option>
+            <option selected>2</option>
+            <option>3</option>
+          </select>
+        </label>
         <label>
           People in home
           <select id="occupants">
@@ -233,11 +265,11 @@
         </label>
       </div>
 
+      <div class="nav-title">Current system</div>
       <div class="panel">
-        <h2>Current system A</h2>
         <label>
           Boiler type
-          <select id="currentABoiler">
+          <select id="currentBoiler">
             <option value="regular">Regular</option>
             <option value="system">System</option>
             <option value="combi" selected>Combi</option>
@@ -245,7 +277,7 @@
         </label>
         <label>
           Water
-          <select id="currentAWater">
+          <select id="currentWater">
             <option value="open_vented">Open vented</option>
             <option value="mixergy_open">Mixergy open vented</option>
             <option value="unvented">Unvented</option>
@@ -256,33 +288,10 @@
         </label>
       </div>
 
+      <div class="nav-title">Potential solution A</div>
       <div class="panel">
-        <h2>Current system B</h2>
         <label>
-          Boiler type
-          <select id="currentBBoiler">
-            <option value="regular">Regular</option>
-            <option value="system">System</option>
-            <option value="combi">Combi</option>
-          </select>
-        </label>
-        <label>
-          Water
-          <select id="currentBWater">
-            <option value="open_vented">Open vented</option>
-            <option value="mixergy_open">Mixergy open vented</option>
-            <option value="unvented">Unvented</option>
-            <option value="mixergy_unvented">Mixergy unvented</option>
-            <option value="thermal_store">Thermal store</option>
-            <option value="on_demand">On demand</option>
-          </select>
-        </label>
-      </div>
-
-      <div class="panel">
-        <h2>New system A</h2>
-        <label>
-          Boiler type
+          Boiler
           <select id="newABoiler">
             <option value="regular">Regular</option>
             <option value="system">System</option>
@@ -301,10 +310,10 @@
         </label>
       </div>
 
+      <div class="nav-title">Potential solution B</div>
       <div class="panel">
-        <h2>New system B</h2>
         <label>
-          Boiler type
+          Boiler
           <select id="newBBoiler">
             <option value="regular">Regular</option>
             <option value="system">System</option>
@@ -318,37 +327,51 @@
             <option value="mixergy_open">Mixergy open vented</option>
             <option value="unvented">Unvented</option>
             <option value="mixergy_unvented">Mixergy unvented</option>
-            <option value="thermal_store">Thermal store</option>
             <option value="on_demand">On demand</option>
           </select>
         </label>
       </div>
     </aside>
 
-    <section id="output">
-      <div class="panel">
-        <h2>Recommendation</h2>
-        <div id="recommendationText" style="font-size:.74rem; line-height:1.4;">
-          Fill in the details to get two quantified options.
+    <div id="right">
+      <div id="top-row">
+        <div class="choice-box">
+          <div class="choice-head">
+            <div class="tick" id="bestTick"></div>
+            <h3>Best choice</h3>
+          </div>
+          <div class="choice-body" id="bestBody">
+            Fill in your details to see the best match.
+          </div>
+        </div>
+        <div class="choice-box">
+          <div class="choice-head">
+            <div class="tick" id="secondTick"></div>
+            <h3>Second choice</h3>
+          </div>
+          <div class="choice-body" id="secondBody">
+            Second option will appear here.
+          </div>
         </div>
       </div>
-      <div class="panel">
-        <h2>Real-world metrics</h2>
-        <div class="metrics-grid" id="metricsGrid"></div>
+      <div id="summary">
+        <div id="summary-box">
+          <div id="summary-text">
+            Summary will appear here.
+          </div>
+          <div id="summary-disclaimer">
+            This output is indicative only. Installer survey, pipe runs and manufacturer requirements take precedence.
+            Sources: https://github.com/martinbibb-cmd/System-recommendation
+          </div>
+        </div>
       </div>
-      <div class="panel">
-        <h2>Summary (copy-ready)</h2>
-        <pre class="code" id="summaryText">Fill in the details to generate a summary.</pre>
-      </div>
-      <div class="panel">
-        <h2>Raw (for app)</h2>
-        <pre class="code" id="rawData"></pre>
-      </div>
-    </section>
+    </div>
   </main>
 
   <script>
-    // same inline data as before + sources split
+    // ==========================
+    // inline data
+    // ==========================
     const systemPerformanceData = [
       {category:"occupancy",bedrooms:"1",metric:"household_total_water_use",value:149,units:"L/day",source_id:"S1"},
       {category:"occupancy",bedrooms:"2",metric:"household_total_water_use",value:276,units:"L/day",source_id:"S1"},
@@ -357,7 +380,6 @@
       {category:"occupancy",bedrooms:"5",metric:"household_total_water_use",value:550,units:"L/day",source_id:"S1"},
       {category:"hot_water",metric:"hot_water_use_per_dwelling",value:80,units:"L/day",source_id:"S2"},
       {category:"hot_water",metric:"hot_water_energy",value:4,units:"kWh/day",source_id:"S2"},
-      // combi waste by house
       {category:"distribution_waste",system_type:"combi",house_type:"flat/bungalow",metric:"hot_water_waste_per_draw",value:1,units:"L/draw",source_id:"S3"},
       {category:"distribution_waste",system_type:"combi",house_type:"terraced",metric:"hot_water_waste_per_draw",value:5.5,units:"L/draw",source_id:"S3"},
       {category:"distribution_waste",system_type:"combi",house_type:"semi",metric:"hot_water_waste_per_draw",value:5.5,units:"L/draw",source_id:"S3"},
@@ -365,15 +387,12 @@
       {category:"distribution_waste",system_type:"combi",house_type:"terraced",metric:"hot_water_wait_time",value:45,units:"s",source_id:"S3"},
       {category:"distribution_waste",system_type:"combi",house_type:"semi",metric:"hot_water_wait_time",value:45,units:"s",source_id:"S3"},
       {category:"distribution_waste",system_type:"combi",house_type:"detached",metric:"hot_water_wait_time",value:90,units:"s",source_id:"S3"},
-      // stored
       {category:"distribution_waste",system_type:"regular/unvented",house_type:"all",metric:"hot_water_waste_per_draw",value:1.5,units:"L/draw",source_id:"S3"},
       {category:"distribution_waste",system_type:"regular/unvented",house_type:"all",metric:"hot_water_wait_time",value:10,units:"s",source_id:"S3"},
-      // combi losses
       {category:"combi_losses",metric:"dhw_startup_loss_per_draw",value:0.025,units:"kWh/draw",source_id:"S4"},
       {category:"combi_losses",metric:"post_purge_dump_per_draw",value:0.015,units:"kWh/draw",source_id:"S4"},
       {category:"combi_losses",house_type:"semi",metric:"dhw_distribution_and_control_losses",value:600,units:"kWh/year",source_id:"S4"},
       {category:"combi_losses",house_type:"detached",metric:"dhw_distribution_and_control_losses",value:750,units:"kWh/year",source_id:"S4"},
-      // efficiencies
       {category:"system_efficiency",system_type:"open_vented",metric:"real_world_efficiency_penalty",value:2,units:"percent",source_id:"S5"},
       {category:"system_efficiency",system_type:"sealed",metric:"real_world_efficiency_penalty",value:0,units:"percent",source_id:"S5"},
       {category:"system_efficiency",system_type:"combi",metric:"real_world_dhw_efficiency",value:78,units:"percent",source_id:"S6"},
@@ -381,380 +400,195 @@
       {category:"system_efficiency",system_type:"unvented_cyl",metric:"real_world_dhw_efficiency",value:65,units:"percent",source_id:"S7"},
       {category:"system_efficiency",system_type:"any_cyl",metric:"cylinder_standing_loss_modern",value:1.5,units:"kWh/day",source_id:"S3"},
       {category:"system_efficiency",system_type:"old_vented_cyl",metric:"cylinder_standing_loss_old",value:3.5,units:"kWh/day",source_id:"S3"},
-      // modulation
       {category:"modulation_benefit",system_type:"regular/unvented",metric:"boiler_effective_efficiency_gain_vs_short_draws",value:3,units:"percent",source_id:"S7"},
       {category:"modulation_benefit",system_type:"combi",metric:"boiler_effective_efficiency_drop_vs_long_burns",value:3,units:"percent",source_id:"S4"},
-      // ongoing
       {category:"ongoing_costs",system_type:"system",metric:"annualised_extra_service_cost",value:20,units:"GBP/year",source_id:"S8"},
       {category:"ongoing_costs",system_type:"combi",metric:"annualised_extra_service_cost",value:50,units:"GBP/year",source_id:"S8"}
     ];
-
-    const sources = [
+    const sourcesList = [
       {id:"S1",title:"UK household water use figures",desc:"149 L/day single, 276 L/day two-person, ~450 L/day four-person"},
       {id:"S2",title:"UK domestic hot water ~4 kWh/day",desc:"~80 L at 55°C per dwelling"},
       {id:"S3",title:"Combi hot water delivery/waste",desc:"5–8 L/draw and 30–90 s for distant taps; cylinders ~1–2 L"},
       {id:"S4",title:"SAP/field combi DHW loss allowance",desc:"~600 kWh/yr + per-draw warm-up and post-purge dumping"},
       {id:"S5",title:"Open-vented vs sealed heating efficiency",desc:"Open-vent loses via F&E; sealed avoids it"},
-      {id:"S6",title:"Field efficiencies combi vs cylinder",desc:"Combis 75–82%, cylinders 30–70% depending on standing loss"},
+      {id:"S6",title:"Field efficiencies combi vs cylinder",desc:"Combis 75–82%, cylinders 30–70%"},
       {id:"S7",title:"Unvented cylinders better insulated, longer burns",desc:"Long charge -> better modulation -> higher effective DHW efficiency"},
       {id:"S8",title:"Service/maintenance cost differentials",desc:"Combis cycle more (DHW) so higher annualised cost"}
     ];
 
-    function buildDataCSV() {
-      const headers = ["category","sub_category","system_type","house_type","bedrooms","metric","value","units","source_id","notes"];
-      const lines = [headers.join(",")];
-      systemPerformanceData.forEach(row => {
-        const line = [
-          row.category || "",
-          row.sub_category || "",
-          row.system_type || "",
-          row.house_type || "",
-          row.bedrooms || "",
-          row.metric || "",
-          row.value !== undefined ? row.value : "",
-          row.units || "",
-          row.source_id || "",
-          row.notes || ""
-        ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(",");
-        lines.push(line);
-      });
-      return lines.join("\n");
+    function getHouseholdWater(beds) {
+      const r = systemPerformanceData.find(i => i.category === "occupancy" && i.bedrooms === beds);
+      return r ? r.value : 276;
     }
-
-    function buildSourcesCSV() {
-      const headers = ["source_id","reference_title","description"];
-      const lines = [headers.join(",")];
-      sources.forEach(s => {
-        const line = [
-          `"${s.id}"`,
-          `"${(s.title || "").replace(/"/g,'""')}"`,
-          `"${(s.desc || s.description || "").replace(/"/g,'""')}"`
-        ].join(",");
-        lines.push(line);
-      });
-      return lines.join("\n");
-    }
-
-    async function ensureCsv(fileName, fallbackBuilder) {
-      try {
-        const res = await fetch(fileName, {cache: "no-store"});
-        if (!res.ok) throw new Error("not ok");
-      } catch (err) {
-        const csvText = fallbackBuilder();
-        const blob = new Blob([csvText], {type: "text/csv"});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = fileName;
-        a.style.display = "none";
-        document.body.appendChild(a);
-        createCsvStrip(fileName, csvText, url);
-      }
-    }
-
-    function createCsvStrip(fileName, csvText, url) {
-      let bar = document.getElementById("sr-csv-strip");
-      if (!bar) {
-        bar = document.createElement("div");
-        bar.id = "sr-csv-strip";
-        bar.style.position = "fixed";
-        bar.style.bottom = "1rem";
-        bar.style.right = "1rem";
-        bar.style.background = "#0f172a";
-        bar.style.color = "#fff";
-        bar.style.padding = "0.5rem 0.75rem";
-        bar.style.borderRadius = "0.5rem";
-        bar.style.fontSize = "0.7rem";
-        bar.style.boxShadow = "0 10px 25px rgba(15,23,42,.25)";
-        bar.textContent = "CSV fallback created:";
-        document.body.appendChild(bar);
-      }
-      const btnDl = document.createElement("button");
-      btnDl.textContent = "Download " + fileName;
-      btnDl.style.marginLeft = "0.5rem";
-      btnDl.style.background = "#38bdf8";
-      btnDl.style.border = "none";
-      btnDl.style.color = "#0f172a";
-      btnDl.style.borderRadius = "0.35rem";
-      btnDl.style.cursor = "pointer";
-      btnDl.style.fontWeight = "600";
-      btnDl.onclick = () => {
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = fileName;
-        a.click();
-      };
-      const btnPrint = document.createElement("button");
-      btnPrint.textContent = "Print " + fileName;
-      btnPrint.style.marginLeft = "0.5rem";
-      btnPrint.style.background = "rgba(255,255,255,.1)";
-      btnPrint.style.border = "1px solid rgba(255,255,255,.2)";
-      btnPrint.style.color = "#fff";
-      btnPrint.style.borderRadius = "0.35rem";
-      btnPrint.style.cursor = "pointer";
-      btnPrint.onclick = () => {
-        const w = window.open("", "_blank");
-        w.document.write("<pre>" + csvText.replace(/</g,"&lt;") + "</pre>");
-        w.document.close();
-      };
-      bar.appendChild(document.createElement("br"));
-      bar.appendChild(btnDl);
-      bar.appendChild(btnPrint);
-    }
-
     function getCombiWaste(houseType) {
-      const m = systemPerformanceData.find(r => r.category==="distribution_waste" && r.system_type==="combi" && r.house_type===houseType);
-      return m ? m.value : 5.5;
+      const r = systemPerformanceData.find(i => i.category==="distribution_waste" && i.system_type==="combi" && i.house_type===houseType);
+      return r ? r.value : 5.5;
     }
     function getCombiWait(houseType) {
-      const m = systemPerformanceData.find(r => r.category==="distribution_waste" && r.system_type==="combi" && r.house_type===houseType && r.metric==="hot_water_wait_time");
-      return m ? m.value : 45;
+      const r = systemPerformanceData.find(i => i.category==="distribution_waste" && i.system_type==="combi" && i.house_type===houseType && i.metric==="hot_water_wait_time");
+      return r ? r.value : 45;
     }
     function getStoredWaste() {
-      const m = systemPerformanceData.find(r => r.category==="distribution_waste" && r.system_type==="regular/unvented" && r.metric==="hot_water_waste_per_draw");
-      return m ? m.value : 1.5;
+      const r = systemPerformanceData.find(i => i.category==="distribution_waste" && i.system_type==="regular/unvented" && i.metric==="hot_water_waste_per_draw");
+      return r ? r.value : 1.5;
     }
     function getStoredWait() {
-      const m = systemPerformanceData.find(r => r.category==="distribution_waste" && r.system_type==="regular/unvented" && r.metric==="hot_water_wait_time");
-      return m ? m.value : 10;
+      const r = systemPerformanceData.find(i => i.category==="distribution_waste" && i.system_type==="regular/unvented" && i.metric==="hot_water_wait_time");
+      return r ? r.value : 10;
     }
 
     function evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentWater, newBoiler, newWater}) {
       const combiWarmup = 0.025;
       const combiDump = 0.015;
       const isCombi = newBoiler === "combi";
-      const isUnvented = newWater === "unvented" || newWater === "mixergy_unvented";
-      const storedWaste = getStoredWaste();
-      const storedWait = getStoredWait();
+      const isUnvented = (newWater === "unvented" || newWater === "mixergy_unvented");
+      const isCurrentOpen = (currentWater === "open_vented" || currentWater === "mixergy_open");
       let score = 0;
-      const notes = [];
       let dailyWasteL = 0;
       let dailyOverheadKWh = 0;
       let dailyCylinderLoss = 0;
       let extraCost = 0;
+      const bullets = [];
 
       if (isCombi) {
-        const combiWaste = getCombiWaste(houseType);
-        const combiWait = getCombiWait(houseType);
-        dailyWasteL = combiWaste * drawsPerDay;
+        const wastePerDraw = getCombiWaste(houseType);
+        const waitSeconds = getCombiWait(houseType);
+        dailyWasteL = wastePerDraw * drawsPerDay;
         dailyOverheadKWh = (combiWarmup + combiDump) * drawsPerDay;
-        notes.push(`Combi waste per draw ≈ ${combiWaste.toFixed(1)} L → daily ≈ ${dailyWasteL.toFixed(1)} L`);
-        notes.push(`Combi wait ≈ ${combiWait} s`);
-        notes.push(`Combi DHW overhead ≈ ${dailyOverheadKWh.toFixed(2)} kWh/day`);
-        // penalty for high occupants or 2+ bathrooms
+        bullets.push(`Typical combi delay → ${waitSeconds}s to hot water.`);
+        bullets.push(`Water wasted per draw ≈ ${wastePerDraw.toFixed(1)} L → daily ≈ ${dailyWasteL.toFixed(1)} L.`);
+        bullets.push(`Per-draw warm-up + pump overrun ≈ ${dailyOverheadKWh.toFixed(2)} kWh/day.`);
         if (occupants <= 3 && bathrooms <= 2 && houseType !== "detached") {
           score += 3;
         } else {
+          bullets.push("High demand/simultaneous use: combi may not keep up.");
           score -= 2;
-          notes.push("High occupancy / bathrooms → combi may struggle with simultaneous demand.");
         }
-        // cheapest rule
-        if (currentWater !== "unvented" && currentWater !== "mixergy_unvented") {
-          notes.push("Like-for-like combi is the cheapest route.");
+        if (!isUnvented) {
+          bullets.push("Like-for-like combi is normally lowest capital cost.");
           score += 1;
         }
       } else {
-        // stored
+        const storedWaste = getStoredWaste();
+        const waitStored = getStoredWait();
         dailyWasteL = storedWaste * drawsPerDay;
-        dailyCylinderLoss = 1.5; // modern
-        notes.push(`Stored waste per draw ≈ ${storedWaste.toFixed(1)} L → daily ≈ ${dailyWasteL.toFixed(1)} L`);
-        notes.push(`Tap to hot ≈ ${storedWait} s`);
-        notes.push(`Cylinder standing loss ≈ ${dailyCylinderLoss.toFixed(1)} kWh/day`);
-        score += 3; // longer burns, better modulation
+        dailyCylinderLoss = 1.5;
+        bullets.push(`Stored system, tap-to-hot ≈ ${waitStored}s.`);
+        bullets.push(`Water wasted per draw ≈ ${storedWaste.toFixed(1)} L → daily ≈ ${dailyWasteL.toFixed(1)} L.`);
+        bullets.push(`Cylinder standing loss ≈ ${dailyCylinderLoss.toFixed(1)} kWh/day.`);
+        bullets.push("Longer boiler runs → better modulation (≈ +3% effective).");
+        score += 3;
       }
 
-      // cost uplift for open vented -> unvented
-      const isCurrentOpen = currentWater === "open_vented" || currentWater === "mixergy_open";
       if (isCurrentOpen && isUnvented) {
         extraCost = 2000;
-        notes.push("Change from open vented to unvented: approx £2000 extra.");
-        score -= 1; // cost penalty
+        bullets.push("Open-vented → unvented conversion: allow ≈ £2000 extra.");
+        score -= 1;
       }
 
-      return {
-        score,
-        notes,
-        dailyWasteL,
-        dailyOverheadKWh,
-        dailyCylinderLoss,
-        extraCost,
-        isCombi,
-        isUnvented
-      };
+      return {score, bullets, dailyWasteL, dailyOverheadKWh, dailyCylinderLoss, extraCost, isCombi, isUnvented};
     }
 
-    function render() {
+    async function render() {
       const houseType = document.getElementById("houseType").value;
       const bedrooms = document.getElementById("bedrooms").value;
       const bathrooms = parseInt(document.getElementById("bathrooms").value, 10);
       const occupants = parseInt(document.getElementById("occupants").value, 10);
       const drawsPerDay = parseInt(document.getElementById("drawsPerDay").value || "20", 10);
-
-      const currentAWater = document.getElementById("currentAWater").value;
-      const currentABoiler = document.getElementById("currentABoiler").value;
-      const currentBWater = document.getElementById("currentBWater").value;
-      const currentBBoiler = document.getElementById("currentBBoiler").value;
-
+      const currentBoiler = document.getElementById("currentBoiler").value;
+      const currentWater = document.getElementById("currentWater").value;
       const newABoiler = document.getElementById("newABoiler").value;
       const newAWater = document.getElementById("newAWater").value;
       const newBBoiler = document.getElementById("newBBoiler").value;
       const newBWater = document.getElementById("newBWater").value;
 
-      const evalA = evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentWater: currentAWater, newBoiler: newABoiler, newWater: newAWater});
-      const evalB = evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentWater: currentBWater, newBoiler: newBBoiler, newWater: newBWater});
-      const estimatedHouseholdWater = getHouseholdWaterFromBedrooms(bedrooms);
+      const evalA = evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentWater, newBoiler:newABoiler, newWater:newAWater});
+      const evalB = evaluateOption({houseType, occupants, bathrooms, drawsPerDay, currentWater, newBoiler:newBBoiler, newWater:newBWater});
 
-      const best = evalA.score >= evalB.score ? "A" : "B";
+      const bestIsA = evalA.score >= evalB.score;
+      const bestTick = document.getElementById("bestTick");
+      const secondTick = document.getElementById("secondTick");
+      bestTick.textContent = bestIsA ? "A" : "B";
+      secondTick.textContent = bestIsA ? "B" : "A";
+      bestTick.classList.toggle("active", true);
+      secondTick.classList.toggle("active", false);
 
-      const formatOptionSummary = (label, ev, boiler, water) => {
-        const lines = [
-          `- ${label} (${boiler} + ${water})`,
-          `  • Daily HW waste: ${ev.dailyWasteL.toFixed(1)} L`
-        ];
-        if (ev.dailyOverheadKWh) {
-          lines.push(`  • DHW overhead: ${ev.dailyOverheadKWh.toFixed(2)} kWh/day`);
-        }
-        if (ev.dailyCylinderLoss) {
-          lines.push(`  • Cylinder loss: ${ev.dailyCylinderLoss.toFixed(1)} kWh/day`);
-        }
-        if (ev.extraCost) {
-          lines.push(`  • Extra install: ~£${ev.extraCost}`);
-        }
-        return lines.join("\n");
+      const makeBox = (label, ev) => {
+        return `
+<strong>${label}</strong><br>
+• Daily water wasted: ${ev.dailyWasteL.toFixed(1)} L<br>
+${ev.dailyOverheadKWh ? `• DHW overhead: ${ev.dailyOverheadKWh.toFixed(2)} kWh/day<br>` : ""}
+${ev.dailyCylinderLoss ? `• Cylinder loss: ${ev.dailyCylinderLoss.toFixed(1)} kWh/day<br>` : ""}
+${ev.extraCost ? `• Extra install: ≈ £${ev.extraCost}<br>` : ""}
+${ev.bullets.map(b => b + "<br>").join("")}
+        `;
       };
 
-      const recDiv = document.getElementById("recommendationText");
-      recDiv.innerHTML = `
-        <div class="result-row">
-          <div class="tick ${best==="A" ? "active" : ""}">${best==="A" ? "✓" : ""}</div>
-          <div>
-            <strong>Option A: ${newABoiler} + ${newAWater}</strong><br>
-            ${evalA.notes.map(n => `<span>${n}</span><br>`).join("")}
-            <em>Daily water wasted: ${evalA.dailyWasteL.toFixed(1)} L</em><br>
-            ${evalA.dailyOverheadKWh ? `<em>DHW overhead: ${evalA.dailyOverheadKWh.toFixed(2)} kWh/day</em><br>` : ""}
-            ${evalA.dailyCylinderLoss ? `<em>Cylinder loss: ${evalA.dailyCylinderLoss.toFixed(1)} kWh/day</em><br>` : ""}
-            ${evalA.extraCost ? `<strong>Extra install cost: ~£${evalA.extraCost}</strong><br>` : ""}
-          </div>
-        </div>
-        <div class="result-row">
-          <div class="tick ${best==="B" ? "active" : ""}">${best==="B" ? "✓" : ""}</div>
-          <div>
-            <strong>Option B: ${newBBoiler} + ${newBWater}</strong><br>
-            ${evalB.notes.map(n => `<span>${n}</span><br>`).join("")}
-            <em>Daily water wasted: ${evalB.dailyWasteL.toFixed(1)} L</em><br>
-            ${evalB.dailyOverheadKWh ? `<em>DHW overhead: ${evalB.dailyOverheadKWh.toFixed(2)} kWh/day</em><br>` : ""}
-            ${evalB.dailyCylinderLoss ? `<em>Cylinder loss: ${evalB.dailyCylinderLoss.toFixed(1)} kWh/day</em><br>` : ""}
-            ${evalB.extraCost ? `<strong>Extra install cost: ~£${evalB.extraCost}</strong><br>` : ""}
-          </div>
-        </div>
-        <p style="margin-top:.5rem; font-size:.65rem; color:#475569;">
-          Note: Like-for-like combi replacement is typically the lowest capital cost. Moving from open vented to unvented usually adds ~£2000 in the UK due to cylinder, controls and safety set requirements.
-        </p>
-      `;
+      const bestBody = document.getElementById("bestBody");
+      const secondBody = document.getElementById("secondBody");
 
-      // metrics
-      const metrics = document.getElementById("metricsGrid");
-      const optionAEnergyMetric = evalA.isCombi
-        ? {
-            label: "Option A combi DHW overhead",
-            value: `${evalA.dailyOverheadKWh.toFixed(2)} kWh/day`,
-            detail: `${drawsPerDay} draws`
+      if (bestIsA) {
+        bestBody.innerHTML = makeBox(`Solution A: ${newABoiler} + ${newAWater}`, evalA);
+        secondBody.innerHTML = makeBox(`Solution B: ${newBBoiler} + ${newBWater}`, evalB);
+      } else {
+        bestBody.innerHTML = makeBox(`Solution B: ${newBBoiler} + ${newBWater}`, evalB);
+        secondBody.innerHTML = makeBox(`Solution A: ${newABoiler} + ${newAWater}`, evalA);
+      }
+
+      const dailyWater = getHouseholdWater(bedrooms);
+      const localSummary = `
+You told us:
+- ${houseType}, ${bedrooms} bedrooms, ${bathrooms} bathrooms, ${occupants} people
+- Current system: ${currentBoiler} boiler with ${currentWater} hot water
+- Typical total water use for this size: about ${dailyWater} L/day
+- You run about ${drawsPerDay} hot-water draws per day
+
+Solution A (${newABoiler} + ${newAWater}):
+- Wasted hot water: ${evalA.dailyWasteL.toFixed(1)} L per day
+${evalA.dailyOverheadKWh ? `- Combi warm-up/purge energy: ${evalA.dailyOverheadKWh.toFixed(2)} kWh per day\n` : ""}${evalA.dailyCylinderLoss ? `- Cylinder standing loss: ${evalA.dailyCylinderLoss.toFixed(1)} kWh per day\n` : ""}${evalA.extraCost ? `- Extra installation cost expected: ~£${evalA.extraCost}\n` : ""}- Notes: ${evalA.bullets.join("; ")}
+
+Solution B (${newBBoiler} + ${newBWater}):
+- Wasted hot water: ${evalB.dailyWasteL.toFixed(1)} L per day
+${evalB.dailyOverheadKWh ? `- Combi warm-up/purge energy: ${evalB.dailyOverheadKWh.toFixed(2)} kWh per day\n` : ""}${evalB.dailyCylinderLoss ? `- Cylinder standing loss: ${evalB.dailyCylinderLoss.toFixed(1)} kWh per day\n` : ""}${evalB.extraCost ? `- Extra installation cost expected: ~£${evalB.extraCost}\n` : ""}- Notes: ${evalB.bullets.join("; ")}
+
+Best fit for what you entered: ${bestIsA ? `Solution A` : `Solution B`} (higher score).
+      `.trim();
+
+      let finalSummary = localSummary;
+      try {
+        const resp = await fetch("https://survey-brain-api.martinbibb.workers.dev", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({
+            task: "rephrase_system_summary",
+            inputs: {
+              houseType, bedrooms, bathrooms, occupants, drawsPerDay,
+              current: {boiler: currentBoiler, water: currentWater},
+              solutionA: {boiler: newABoiler, water: newAWater, metrics: evalA},
+              solutionB: {boiler: newBBoiler, water: newBWater, metrics: evalB},
+              localSummary
+            }
+          })
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && data.summary) {
+            finalSummary = data.summary;
           }
-        : {
-            label: "Option A cylinder loss",
-            value: `${evalA.dailyCylinderLoss.toFixed(1)} kWh/day`,
-            detail: "Modern insulated cylinder"
-          };
-      const optionBEnergyMetric = evalB.isCombi
-        ? {
-            label: "Option B combi DHW overhead",
-            value: `${evalB.dailyOverheadKWh.toFixed(2)} kWh/day`,
-            detail: `${drawsPerDay} draws`
-          }
-        : {
-            label: "Option B cylinder loss",
-            value: `${evalB.dailyCylinderLoss.toFixed(1)} kWh/day`,
-            detail: "Modern insulated cylinder"
-          };
-
-      metrics.innerHTML = `
-        <div class="metric">
-          <small>Household water (est.)</small>
-          <strong>${estimatedHouseholdWater} L/day</strong>
-          <small>${bedrooms} bed, ${occupants} people</small>
-        </div>
-        <div class="metric">
-          <small>Option A daily waste</small>
-          <strong>${evalA.dailyWasteL.toFixed(1)} L</strong>
-          <small>${newABoiler} + ${newAWater}</small>
-        </div>
-        <div class="metric">
-          <small>Option B daily waste</small>
-          <strong>${evalB.dailyWasteL.toFixed(1)} L</strong>
-          <small>${newBBoiler} + ${newBWater}</small>
-        </div>
-        <div class="metric">
-          <small>${optionAEnergyMetric.label}</small>
-          <strong>${optionAEnergyMetric.value}</strong>
-          <small>${optionAEnergyMetric.detail}</small>
-        </div>
-        <div class="metric">
-          <small>${optionBEnergyMetric.label}</small>
-          <strong>${optionBEnergyMetric.value}</strong>
-          <small>${optionBEnergyMetric.detail}</small>
-        </div>
-      `;
-
-      const summaryLines = [
-        "Inputs",
-        `- House: ${houseType}, ${bedrooms} bed, ${bathrooms} bath, ${occupants} people`,
-        `- Current A: ${currentABoiler} + ${currentAWater}`,
-        `- Current B: ${currentBBoiler} + ${currentBWater}`,
-        `- Hot draws per day: ${drawsPerDay}`,
-        `- Estimated total water use: ${estimatedHouseholdWater} L/day`,
-        "",
-        "Results",
-        formatOptionSummary("Option A", evalA, newABoiler, newAWater),
-        formatOptionSummary("Option B", evalB, newBBoiler, newBWater),
-        "",
-        "Recommendation",
-        `- Best option: Option ${best}`,
-        "- Moving from open vented to unvented usually adds around £2000 in the UK."
-      ];
-      document.getElementById("summaryText").textContent = summaryLines.join("\n");
-
-      document.getElementById("rawData").textContent = JSON.stringify({
-        inputs: {
-          houseType, bedrooms, bathrooms, occupants, drawsPerDay,
-          currentA: {boiler: currentABoiler, water: currentAWater},
-          currentB: {boiler: currentBBoiler, water: currentBWater},
-          newA: {boiler: newABoiler, water: newAWater},
-          newB: {boiler: newBBoiler, water: newBWater}
-        },
-        outputs: {
-          optionA: evalA,
-          optionB: evalB,
-          best
         }
-      }, null, 2);
+      } catch (e) {
+        // ignore, use localSummary
+      }
+
+      document.getElementById("summary-text").textContent = finalSummary;
     }
 
-    function getHouseholdWaterFromBedrooms(beds) {
-      const r = systemPerformanceData.find(i => i.category==="occupancy" && i.bedrooms===beds);
-      return r ? r.value : 276;
-    }
-
-    // events
     document.querySelectorAll("select,input").forEach(el => el.addEventListener("input", render));
 
+    document.getElementById("btn-print").addEventListener("click", () => window.print());
     document.getElementById("btn-sources").addEventListener("click", () => {
       window.open("https://github.com/martinbibb-cmd/System-recommendation", "_blank");
     });
-
-    document.getElementById("btn-print").addEventListener("click", () => {
-      window.print();
-    });
-
     document.getElementById("btn-export-data").addEventListener("click", () => {
       const headers = ["category","sub_category","system_type","house_type","bedrooms","metric","value","units","source_id","notes"];
       const lines = [headers.join(",")];
@@ -781,16 +615,11 @@
       a.click();
       URL.revokeObjectURL(url);
     });
-
     document.getElementById("btn-export-sources").addEventListener("click", () => {
       const headers = ["source_id","reference_title","description"];
       const lines = [headers.join(",")];
-      sources.forEach(s => {
-        const line = [
-          `"${s.id}"`,
-          `"${(s.title || "").replace(/"/g,'""')}"`,
-          `"${((s.desc || s.description || "").replace(/"/g,'""'))}"`
-        ].join(",");
+      sourcesList.forEach(s => {
+        const line = [`"${s.id}"`,`"${s.title.replace(/"/g,'""')}"`,`"${s.desc.replace(/"/g,'""')}"`].join(",");
         lines.push(line);
       });
       const blob = new Blob([lines.join("\n")], {type:"text/csv"});
@@ -803,11 +632,6 @@
     });
 
     render();
-
-    document.addEventListener("DOMContentLoaded", () => {
-      ensureCsv("system_performance_data.csv", buildDataCSV);
-      ensureCsv("sources.csv", buildSourcesCSV);
-    });
   </script>
 </body>
 </html>
