@@ -450,7 +450,7 @@
       combi_on_demand: {
         label: "Combi Boiler",
         efficiency: "83–86%",
-        installCost: "£3,000–£4,000 (up to £5,000+ if converting from stored)",
+        installCost: "Relative install cost: Low (baseline for like-for-like swaps)",
         space: "No cylinder",
         lifespan: "10–12 years",
         maintenance: 4,
@@ -473,7 +473,7 @@
       system_unvented: {
         label: "System Boiler (Unvented)",
         efficiency: "88–91%",
-        installCost: "£4,000–£5,500",
+        installCost: "Relative install cost: Medium-high (cylinder + safety kit)",
         space: "Needs cylinder / airing cupboard",
         lifespan: "15–20 years",
         maintenance: 3,
@@ -496,7 +496,7 @@
       regular_open: {
         label: "Regular Boiler (Open-Vented)",
         efficiency: "86–89%",
-        installCost: "£3,000–£4,500",
+        installCost: "Relative install cost: Low-medium (staying vented keeps costs down)",
         space: "Loft tank + airing cupboard",
         lifespan: "15–25 years",
         maintenance: 2,
@@ -518,7 +518,7 @@
       mixergy_open: {
         label: "Mixergy – Open-Vented (Smart Cylinder + Regular)",
         efficiency: "87–90%",
-        installCost: "£4,500–£5,500",
+        installCost: "Relative install cost: Medium-high (smart cylinder premium)",
         space: "Vented cylinder + loft tank",
         lifespan: "20–25 years",
         maintenance: 3,
@@ -540,7 +540,7 @@
       mixergy_unvented: {
         label: "Mixergy – Unvented (Smart Cylinder + System)",
         efficiency: "89–92%",
-        installCost: "£5,000–£6,000",
+        installCost: "Relative install cost: High (premium smart unvented setup)",
         space: "Unvented cylinder",
         lifespan: "20–25 years",
         maintenance: 3,
@@ -648,7 +648,6 @@
       let dailyWasteL = 0;
       let dailyOverheadKWh = 0;
       let dailyCylinderLoss = 0;
-      let extraCost = 0;
       const pros = [];
       const cons = [];
       const relevant = new Set();
@@ -689,17 +688,15 @@
       // cost / disruption
       // 1) open vented → unvented
       if (isCurrentOpen && (newWater === "unvented" || newWater === "mixergy_unvented")) {
-        extraCost += 2000;
-        cons.push("Open-vented → unvented typically adds ~£2000");
+        cons.push("Open-vented → unvented typically adds a notable premium for upgrade work");
         score -= 1;
-        relevant.add("cons:Open-vented → unvented typically adds ~£2000");
+        relevant.add("cons:Open-vented → unvented typically adds a notable premium for upgrade work");
       }
-      // 2) stored → combi (actual UK reality: +£1500)
+      // 2) stored → combi (common UK reality: noticeable extra labour/material)
       if (newBoiler === "combi" && currentBoiler !== "combi") {
-        extraCost += 1500;
-        cons.push("Converting to a combi from stored is often £1200–£1800 extra (pipework, cylinder removal)");
+        cons.push("Converting to a combi from stored often adds a noticeable premium for pipework and cylinder removal");
         score -= 1;
-        relevant.add("cons:Converting to a combi from stored is often £1200–£1800 extra (pipework, cylinder removal)");
+        relevant.add("cons:Converting to a combi from stored often adds a noticeable premium for pipework and cylinder removal");
       }
       // 3) like-for-like
       if (newBoiler === currentBoiler && newWater === currentWater) {
@@ -713,7 +710,6 @@
         dailyWasteL,
         dailyOverheadKWh,
         dailyCylinderLoss,
-        extraCost,
         pros,
         cons,
         relevant
