@@ -202,19 +202,19 @@
       gap: 1.5rem;
       flex-wrap: wrap;
     }
-    .pros, .cons {
+    .strengths, .limitations {
       font-size: .45em;
       min-width: 220px;
     }
-    .pros h4, .cons h4 {
+    .strengths h4, .limitations h4 {
       margin: 0 0 .2rem;
       font-size: .7em;
     }
-    .pros ul, .cons ul {
+    .strengths ul, .limitations ul {
       margin: 0;
       padding-left: 1.1rem;
     }
-    .pros li, .cons li {
+    .strengths li, .limitations li {
       margin-bottom: .15rem;
     }
     .highlight {
@@ -258,18 +258,19 @@
       .result-card {
         page-break-inside: avoid;
         break-inside: avoid;
-        font-size: 16pt; /* smaller than your 22pt print */
+        font-size: 12pt;
         margin-bottom: 0.4rem;
       }
 
-      /* make summary box smaller for print */
+      /* start the long explanation on a new page and make summary box smaller for print */
       #in-depth-summary {
         page-break-inside: avoid;
         break-inside: avoid;
+        page-break-before: always;
         font-size: 10pt;
       }
 
-      /* tighter disclaimer so it doesn’t spill to a 4th page */
+      /* keep disclaimer with the summary and make it tighter */
       #summary-disclaimer {
         font-size: 8pt;
         page-break-inside: avoid;
@@ -893,16 +894,16 @@
           </div>
           <div class="why">${why}</div>
           <div class="list-cols">
-            <div class="pros">
-              <h4>Pros</h4>
+            <div class="strengths">
+              <h4>Strengths</h4>
               <ul>
-                ${prosHtml || "<li>No major pros recorded.</li>"}
+                ${prosHtml || "<li>No key strengths recorded.</li>"}
               </ul>
             </div>
-            <div class="cons">
-              <h4>Cons</h4>
+            <div class="limitations">
+              <h4>Limitations</h4>
               <ul>
-                ${consHtml || "<li>No major cons recorded.</li>"}
+                ${consHtml || "<li>No key limitations recorded.</li>"}
               </ul>
             </div>
           </div>
