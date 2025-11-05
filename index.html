@@ -443,7 +443,135 @@
       return b === "combi";
     }
 
-    // builds the long engineer-style summary for both options
+    // science-based profiles
+    const systemProfiles = {
+      combi_on_demand: {
+        label: "Combi Boiler",
+        efficiency: "83–86%",
+        installCost: "£3,000–£4,000 (up to £5,000+ if converting from stored)",
+        space: "No cylinder",
+        lifespan: "10–12 years",
+        maintenance: 4,
+        hotWater: "Instantaneous, but one outlet ~6–10 L/min typical",
+        pressure: "Needs good mains (>1.5 bar, >14 L/min)",
+        renewables: "Poor – no store for solar / HP",
+        strengths: [
+          "Compact, no tanks or cylinder",
+          "Low standing losses",
+          "Good for flats/small 1-bath with strong mains"
+        ],
+        limitations: [
+          "Designed for one tap/shower at a time",
+          "High water waste and cycling losses vs stored",
+          "Shorter life vs stored systems",
+          "Needs bigger gas than a 15 kW regular"
+        ],
+        bestFor: "Flats, small 1-bath homes with strong mains"
+      },
+      system_unvented: {
+        label: "System Boiler (Unvented)",
+        efficiency: "88–91%",
+        installCost: "£4,000–£5,500",
+        space: "Needs cylinder / airing cupboard",
+        lifespan: "15–20 years",
+        maintenance: 3,
+        hotWater: "Stored, mains pressure, good multi-outlet",
+        pressure: "Needs good mains pressure",
+        renewables: "Excellent – PV, Mixergy, heat pumps",
+        strengths: [
+          "High performance, balanced pressure",
+          "Supports multiple outlets/bathrooms",
+          "Future-proof: solar / PV / HP ready",
+          "Holds real-world efficiency near ≈94%"
+        ],
+        limitations: [
+          "Higher install cost",
+          "Needs space for cylinder and discharge",
+          "G3 service/annual maintenance"
+        ],
+        bestFor: "Modern 2–4 bed homes with 1–2 baths"
+      },
+      regular_open: {
+        label: "Regular Boiler (Open-Vented)",
+        efficiency: "86–89%",
+        installCost: "£3,000–£4,500",
+        space: "Loft tank + airing cupboard",
+        lifespan: "15–25 years",
+        maintenance: 2,
+        hotWater: "Stored, gravity or pumped (low pressure)",
+        pressure: "Works with poor mains",
+        renewables: "Good with solar coil / vented Mixergy",
+        strengths: [
+          "Simple, tolerant, long life",
+          "Good for poor mains / rural",
+          "Low maintenance"
+        ],
+        limitations: [
+          "Low pressure unless pumped",
+          "Tanks in loft",
+          "Less efficient than unvented in practice"
+        ],
+        bestFor: "Older houses, rural or low-pressure areas"
+      },
+      mixergy_open: {
+        label: "Mixergy – Open-Vented (Smart Cylinder + Regular)",
+        efficiency: "87–90%",
+        installCost: "£4,500–£5,500",
+        space: "Vented cylinder + loft tank",
+        lifespan: "20–25 years",
+        maintenance: 3,
+        hotWater: "Stored, stratified, gravity or pumped",
+        pressure: "Works with poor mains",
+        renewables: "Excellent – PV / boiler / HP compatible",
+        strengths: [
+          "Smart control, partial heat saves energy",
+          "Stays vented → gentle on old pipework",
+          "PV and future HP friendly"
+        ],
+        limitations: [
+          "Still vented – needs loft tank & pump for power showers",
+          "Higher capital than plain vented",
+          "Needs space"
+        ],
+        bestFor: "Upgraded vented systems, low-pressure areas wanting smart control"
+      },
+      mixergy_unvented: {
+        label: "Mixergy – Unvented (Smart Cylinder + System)",
+        efficiency: "89–92%",
+        installCost: "£5,000–£6,000",
+        space: "Unvented cylinder",
+        lifespan: "20–25 years",
+        maintenance: 3,
+        hotWater: "Stored, mains pressure, multi-outlet",
+        pressure: "Needs strong mains",
+        renewables: "Excellent – PV, HP, dynamic tariffs",
+        strengths: [
+          "High performance, future-proof",
+          "Smart energy savings",
+          "Mains pressure hot water"
+        ],
+        limitations: [
+          "High capital cost",
+          "G3 requirements",
+          "Needs good mains pressure"
+        ],
+        bestFor: "Modern medium-large homes, multi-bath setups"
+      }
+    };
+
+    // map boiler+water → profile key
+    function pickSystemProfile(boiler, water) {
+      if (boiler === "combi") return "combi_on_demand";
+      if (boiler === "system" && water === "unvented") return "system_unvented";
+      if (boiler === "system" && water === "mixergy_unvented") return "mixergy_unvented";
+      if (boiler === "regular" && (water === "open_vented")) return "regular_open";
+      if (boiler === "regular" && (water === "mixergy_open")) return "mixergy_open";
+      // sensible fallbacks
+      if (boiler === "system") return "system_unvented";
+      if (boiler === "regular") return "regular_open";
+      return "combi_on_demand";
+    }
+
     function renderInDepthSummary(options, ctx) {
       const box = document.getElementById("in-depth-summary");
       if (!box) return;
@@ -451,47 +579,51 @@
       const best = options[0];
       const second = options[1];
 
-      const lines = [];
-      lines.push("In-depth summary");
-      lines.push("");
-
-      // helper to write one option
-      function writeOption(label, opt) {
-        lines.push(label + ": " + opt.title);
-        lines.push("Pros:");
-        opt.pros.forEach(p => lines.push(" • " + p));
-        lines.push("Cons:");
-        opt.cons.forEach(c => lines.push(" • " + c));
-
-        // now the rule-based extras you asked for
-        const comingFromOpen = isOpenVentedWater(ctx.currentWater);
-        const targetIsSealed =
-          isCombiBoiler(opt.boiler) || isSealedWater(opt.water) || opt.boiler === "system";
-
-        // 1) open vented -> sealed/combi => leak/weeps risk
-        if (comingFromOpen && targetIsSealed) {
-          lines.push(" • Converting from open-vented to a sealed/high-pressure system can expose minor existing leaks/weeps.");
-        }
-
-        // 2) unvented or combi => shower compatibility
-        if (isCombiBoiler(opt.boiler) || isSealedWater(opt.water)) {
-          lines.push(" • Mains-pressure / modern shower compatible (subject to incoming mains pressure).");
-        }
-
-        // 3) combi => 1 tap at a time
-        if (isCombiBoiler(opt.boiler)) {
-          lines.push(" • Domestic hot water is priority fed – designed for one tap/shower at a time.");
-        }
-
-        lines.push("");
+      if (!best) {
+        box.textContent = "";
+        return;
       }
 
-      writeOption("Best option", best);
-      if (second) {
-        writeOption("Second option", second);
+      const bestProfile = systemProfiles[pickSystemProfile(best.boiler, best.water)] || systemProfiles.combi_on_demand;
+      const secondProfile = second
+        ? systemProfiles[pickSystemProfile(second.boiler, second.water)] || systemProfiles.combi_on_demand
+        : null;
+
+      const comingFromOpen = ctx.currentWater === "open_vented" || ctx.currentWater === "mixergy_open";
+
+      const parts = [];
+
+      parts.push("Explanation of the two options");
+      parts.push("");
+
+      // BEST
+      parts.push(`1) ${bestProfile.label}`);
+      parts.push(`• What it is: ${bestProfile.hotWater}.`);
+      parts.push(`• Efficiency (real): ${bestProfile.efficiency}; install typically ${bestProfile.installCost}.`);
+      parts.push(`• Strengths: ${bestProfile.strengths.join("; ")}.`);
+      parts.push(`• Limitations: ${bestProfile.limitations.join("; ")}.`);
+      if (comingFromOpen && (best.boiler === "combi" || best.boiler === "system" || best.water === "unvented" || best.water === "mixergy_unvented")) {
+        parts.push("• Because you are currently open vented, moving to this sealed/high-pressure option can expose minor existing leaks/weeps.");
+      }
+      parts.push("");
+
+      // SECOND
+      if (second && secondProfile) {
+        parts.push(`2) ${secondProfile.label}`);
+        parts.push(`• What it is: ${secondProfile.hotWater}.`);
+        parts.push(`• Efficiency (real): ${secondProfile.efficiency}; install typically ${secondProfile.installCost}.`);
+        parts.push(`• Strengths: ${secondProfile.strengths.join("; ")}.`);
+        parts.push(`• Limitations: ${secondProfile.limitations.join("; ")}.`);
+        if (comingFromOpen && (second.boiler === "combi" || second.boiler === "system" || second.water === "unvented" || second.water === "mixergy_unvented")) {
+          parts.push("• As above, pressurising an old open-vented system can highlight existing weeps.");
+        }
+        parts.push("");
       }
 
-      box.textContent = lines.join("\n");
+      // CLEAR DISCLAIMER
+      parts.push("Disclaimer: This comparison is illustrative and based on typical UK domestic installs. Actual suitability, costs, and G3/unvented requirements must be confirmed by an on-site survey and installer/designer. Mains pressure must be measured before committing to a combi or unvented solution.");
+
+      box.textContent = parts.join("\n");
     }
 
     function getRecommendedDraws(people) {
@@ -654,14 +786,53 @@
     }
 
     function makeResultCard(opt, why, isBest) {
-      // highlight relevant pros/cons
-      const prosHtml = opt.pros.map(p => {
-        const key = "pros:" + p;
-        return `<li${opt.relevant.has(key) ? ' class="highlight"' : ''}>${p}</li>`;
+      // get profile
+      const profileKey = pickSystemProfile(opt.boiler, opt.water);
+      const profile = systemProfiles[profileKey] || systemProfiles.combi_on_demand;
+
+      // relevance logic
+      const currentWater = document.getElementById("currentWater").value;
+      const comingFromOpen = currentWater === "open_vented" || currentWater === "mixergy_open";
+      const targetIsSealed =
+        opt.boiler === "combi" ||
+        opt.boiler === "system" ||
+        opt.water === "unvented" ||
+        opt.water === "mixergy_unvented";
+
+      // build pros/cons from profile
+      const prosHtml = (profile.strengths || []).map(p => {
+        let highlight = false;
+        // highlight future-proof if system/mixergy
+        if (p.toLowerCase().includes("future") || p.toLowerCase().includes("pv")) {
+          highlight = true;
+        }
+        // highlight “works with poor mains” if current is open vented
+        if (comingFromOpen && p.toLowerCase().includes("poor mains")) {
+          highlight = true;
+        }
+        return `<li${highlight ? ' class="highlight"' : ''}>${p}</li>`;
       }).join("");
-      const consHtml = opt.cons.map(c => {
-        const key = "cons:" + c;
-        return `<li${opt.relevant.has(key) ? ' class="highlight"' : ''}>${c}</li>`;
+
+      const consArray = profile.limitations ? [...profile.limitations] : [];
+
+      // add dynamic cons
+      if (comingFromOpen && targetIsSealed) {
+        consArray.push("Converting from open vented to sealed/high pressure can expose minor existing leaks/weeps.");
+      }
+      if (opt.boiler === "combi") {
+        consArray.push("Designed for one tap/shower at a time; performance follows mains.");
+        consArray.push("Combi will usually need a bigger gas supply than a 15 kW regular.");
+      }
+
+      const consHtml = consArray.map(c => {
+        let highlight = false;
+        if (c.toLowerCase().includes("leak") || c.toLowerCase().includes("sealed")) {
+          highlight = true;
+        }
+        if (c.toLowerCase().includes("mains") && currentWater === "open_vented") {
+          highlight = true;
+        }
+        return `<li${highlight ? ' class="highlight"' : ''}>${c}</li>`;
       }).join("");
 
       return `
@@ -669,8 +840,8 @@
         <div class="result-image">
           ${renderBoilerImage(opt)}
           <div class="result-image-label">
-            <span class="result-image-boiler">${opt.boilerLabel}</span>
-            <span class="result-image-water">${opt.waterLabel}</span>
+            <span class="result-image-boiler">${profile.label}</span>
+            <span class="result-image-water">${formatWaterName(opt.water)}</span>
           </div>
         </div>
         <div class="result-body">
@@ -692,6 +863,9 @@
                 ${consHtml || "<li>No major cons recorded.</li>"}
               </ul>
             </div>
+          </div>
+          <div style="font-size:.4em;color:#475569;margin-top:.35rem;">
+            Seasonal/real-world efficiency: ${profile.efficiency} · Install cost: ${profile.installCost} · Space: ${profile.space} · Lifespan: ${profile.lifespan} · Best suited: ${profile.bestFor}
           </div>
         </div>
       </div>
