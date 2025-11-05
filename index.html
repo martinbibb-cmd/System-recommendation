@@ -369,6 +369,7 @@
     <div id="right">
       <!-- results will be injected here -->
       <div id="results"></div>
+      <div id="in-depth-summary" style="background:#fff;border:1px solid #e2e8f0;border-radius:.6rem;padding:.55rem .7rem;margin-bottom:.6rem;font-size:.55rem;line-height:1.4;"></div>
       <div id="summary-disclaimer">
         This illustration is for guidance only and does not constitute financial advice, a quotation, or a heating system design.
         Figures are derived from UK field research (2015–2025) on domestic water use, DHW efficiency, combi lag, cylinder losses, and installer-reported performance.
@@ -431,6 +432,67 @@
       "Installer field data on combi lag and post-purge",
       "UK open-vented vs sealed system practice"
     ];
+
+    function isOpenVentedWater(w) {
+      return w === "open_vented" || w === "mixergy_open";
+    }
+    function isSealedWater(w) {
+      return w === "unvented" || w === "mixergy_unvented";
+    }
+    function isCombiBoiler(b) {
+      return b === "combi";
+    }
+
+    // builds the long engineer-style summary for both options
+    function renderInDepthSummary(options, ctx) {
+      const box = document.getElementById("in-depth-summary");
+      if (!box) return;
+
+      const best = options[0];
+      const second = options[1];
+
+      const lines = [];
+      lines.push("In-depth summary");
+      lines.push("");
+
+      // helper to write one option
+      function writeOption(label, opt) {
+        lines.push(label + ": " + opt.title);
+        lines.push("Pros:");
+        opt.pros.forEach(p => lines.push(" • " + p));
+        lines.push("Cons:");
+        opt.cons.forEach(c => lines.push(" • " + c));
+
+        // now the rule-based extras you asked for
+        const comingFromOpen = isOpenVentedWater(ctx.currentWater);
+        const targetIsSealed =
+          isCombiBoiler(opt.boiler) || isSealedWater(opt.water) || opt.boiler === "system";
+
+        // 1) open vented -> sealed/combi => leak/weeps risk
+        if (comingFromOpen && targetIsSealed) {
+          lines.push(" • Converting from open-vented to a sealed/high-pressure system can expose minor existing leaks/weeps.");
+        }
+
+        // 2) unvented or combi => shower compatibility
+        if (isCombiBoiler(opt.boiler) || isSealedWater(opt.water)) {
+          lines.push(" • Mains-pressure / modern shower compatible (subject to incoming mains pressure).");
+        }
+
+        // 3) combi => 1 tap at a time
+        if (isCombiBoiler(opt.boiler)) {
+          lines.push(" • Domestic hot water is priority fed – designed for one tap/shower at a time.");
+        }
+
+        lines.push("");
+      }
+
+      writeOption("Best option", best);
+      if (second) {
+        writeOption("Second option", second);
+      }
+
+      box.textContent = lines.join("\n");
+    }
 
     function getRecommendedDraws(people) {
       const p = Number(people);
@@ -569,6 +631,14 @@
         const why = makeWhyText(opt, occupants, bathrooms);
         return makeResultCard(opt, why, opt.id === bestId);
       }).join("");
+
+      // in-depth summary based on both options and the current system
+      renderInDepthSummary(options, {
+        currentWater,
+        currentBoiler,
+        bathrooms,
+        occupants
+      });
     }
 
     function makeWhyText(opt, occupants, bathrooms) {
