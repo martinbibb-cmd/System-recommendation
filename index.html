@@ -235,9 +235,50 @@
       header { padding-top: 2.2rem; }
     }
     @media print {
-      header, aside, .top-actions { display: none !important; }
-      main { grid-template-columns: 1fr !important; }
-      body { background: #fff; }
+      /* hide stuff we don’t need on paper */
+      header .top-actions,
+      aside {
+        display: none !important;
+      }
+
+      body {
+        background: #fff !important;
+      }
+
+      main {
+        grid-template-columns: 1fr !important;
+      }
+
+      #right {
+        padding: 0 !important;
+        max-width: 900px;
+      }
+
+      /* keep each option together */
+      .result-card {
+        page-break-inside: avoid;
+        break-inside: avoid;
+        font-size: 16pt; /* smaller than your 22pt print */
+        margin-bottom: 0.4rem;
+      }
+
+      /* make summary box smaller for print */
+      #in-depth-summary {
+        page-break-inside: avoid;
+        break-inside: avoid;
+        font-size: 10pt;
+      }
+
+      /* tighter disclaimer so it doesn’t spill to a 4th page */
+      #summary-disclaimer {
+        font-size: 8pt;
+        page-break-inside: avoid;
+      }
+
+      @page {
+        size: A4;
+        margin: 12mm;
+      }
     }
   </style>
 </head>
@@ -586,10 +627,8 @@
         return;
       }
 
-      const bestProfile = systemProfiles[pickSystemProfile(best.boiler, best.water)] || systemProfiles.combi_on_demand;
-      const secondProfile = second
-        ? systemProfiles[pickSystemProfile(second.boiler, second.water)] || systemProfiles.combi_on_demand
-        : null;
+      const bestProfile = systemProfiles[pickSystemProfile(best.boiler, best.water)];
+      const secondProfile = second ? systemProfiles[pickSystemProfile(second.boiler, second.water)] : null;
 
       const comingFromOpen = ctx.currentWater === "open_vented" || ctx.currentWater === "mixergy_open";
 
@@ -599,31 +638,36 @@
       parts.push("");
 
       // BEST
-      parts.push(`1) ${bestProfile.label}`);
-      parts.push(`• What it is: ${bestProfile.hotWater}.`);
-      parts.push(`• Efficiency (real): ${bestProfile.efficiency}; install typically ${bestProfile.installCost}.`);
-      parts.push(`• Strengths: ${bestProfile.strengths.join("; ")}.`);
-      parts.push(`• Limitations: ${bestProfile.limitations.join("; ")}.`);
-      if (comingFromOpen && (best.boiler === "combi" || best.boiler === "system" || best.water === "unvented" || best.water === "mixergy_unvented")) {
-        parts.push("• Because you are currently open vented, moving to this sealed/high-pressure option can expose minor existing leaks/weeps.");
+      if (bestProfile) {
+        parts.push(`1) ${bestProfile.label}`);
+        parts.push(`• What it is: ${bestProfile.hotWater}.`);
+        parts.push(`• Efficiency (real): ${bestProfile.efficiency}; install typically ${bestProfile.installCost}.`);
+        parts.push("• Strengths:");
+        bestProfile.strengths.forEach(s => parts.push("   - " + s));
+        parts.push("• Limitations:");
+        bestProfile.limitations.forEach(l => parts.push("   - " + l));
+        if (comingFromOpen && (best.boiler === "combi" || best.boiler === "system" || best.water === "unvented" || best.water === "mixergy_unvented")) {
+          parts.push("   - Converting from open-vented to sealed/high pressure can expose minor existing leaks/weeps.");
+        }
+        parts.push("");
       }
-      parts.push("");
 
       // SECOND
       if (second && secondProfile) {
         parts.push(`2) ${secondProfile.label}`);
         parts.push(`• What it is: ${secondProfile.hotWater}.`);
         parts.push(`• Efficiency (real): ${secondProfile.efficiency}; install typically ${secondProfile.installCost}.`);
-        parts.push(`• Strengths: ${secondProfile.strengths.join("; ")}.`);
-        parts.push(`• Limitations: ${secondProfile.limitations.join("; ")}.`);
+        parts.push("• Strengths:");
+        secondProfile.strengths.forEach(s => parts.push("   - " + s));
+        parts.push("• Limitations:");
+        secondProfile.limitations.forEach(l => parts.push("   - " + l));
         if (comingFromOpen && (second.boiler === "combi" || second.boiler === "system" || second.water === "unvented" || second.water === "mixergy_unvented")) {
-          parts.push("• As above, pressurising an old open-vented system can highlight existing weeps.");
+          parts.push("   - As above, pressurising can highlight existing weeps.");
         }
         parts.push("");
       }
 
-      // CLEAR DISCLAIMER
-      parts.push("Disclaimer: This comparison is illustrative and based on typical UK domestic installs. Actual suitability, costs, and G3/unvented requirements must be confirmed by an on-site survey and installer/designer. Mains pressure must be measured before committing to a combi or unvented solution.");
+      parts.push("Disclaimer: This comparison is illustrative and based on typical UK domestic installs (2015–2025). Actual pressure, G3/unvented requirements, and costs must be confirmed on site.");
 
       box.textContent = parts.join("\n");
     }
