@@ -170,11 +170,15 @@
       display: flex;
       gap: .5rem;
       align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
       margin-bottom: .25rem;
     }
     .result-title {
       font-weight: 700;
       font-size: .55em;
+      flex: 1;
+      min-width: 160px;
     }
     .tick {
       width: 1.3em;
@@ -196,6 +200,35 @@
       font-size: .45em;
       margin-bottom: .35rem;
       color: #0f172a;
+    }
+    .read-aloud-btn {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--accent);
+      font-size: .4em;
+      font-weight: 600;
+      border-radius: .4rem;
+      padding: .25rem .45rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+    }
+    .read-aloud-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .read-aloud-btn:hover {
+      border-color: var(--accent);
+      background: #f0f9ff;
+    }
+    .summary-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: .35rem;
+    }
+    .result-content {
+      width: 100%;
     }
     .list-cols {
       display: flex;
@@ -347,15 +380,15 @@
         <label>
           Boiler type
           <select id="currentBoiler">
-            <option value="regular">Regular</option>
+            <option value="regular" selected>Regular</option>
             <option value="system">System</option>
-            <option value="combi" selected>Combi</option>
+            <option value="combi">Combi</option>
           </select>
         </label>
         <label>
           Water
           <select id="currentWater">
-            <option value="open_vented">Open vented</option>
+            <option value="open_vented" selected>Open vented</option>
             <option value="mixergy_open">Mixergy open vented</option>
             <option value="unvented">Unvented</option>
             <option value="mixergy_unvented">Mixergy unvented</option>
@@ -413,6 +446,11 @@
     <div id="right">
       <!-- results will be injected here -->
       <div id="results"></div>
+      <div class="summary-actions">
+        <button type="button" class="read-aloud-btn" data-read-target="in-depth-summary" data-read-prefix="Overall summary">
+          🔊 Read summary
+        </button>
+      </div>
       <div id="in-depth-summary" style="background:#fff;border:1px solid #e2e8f0;border-radius:.6rem;padding:.55rem .7rem;margin-bottom:.6rem;font-size:.55rem;line-height:1.4;white-space:pre-line;"></div>
       <div id="summary-disclaimer">
         This illustration is for guidance only and does not constitute financial advice, a quotation, or a heating system design.
@@ -828,6 +866,14 @@
       }
     }
 
+    function escapeAttr(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
     function makeResultCard(opt, why, isBest) {
       // get profile
       const profileKey = pickSystemProfile(opt.boiler, opt.water);
@@ -878,6 +924,9 @@
         return `<li${highlight ? ' class="highlight"' : ''}>${c}</li>`;
       }).join("");
 
+      const textId = `option-text-${opt.id}`;
+      const readPrefix = escapeAttr(opt.title);
+
       return `
       <div class="result-card">
         <div class="result-image">
@@ -891,24 +940,29 @@
           <div class="result-header">
             <div class="tick ${isBest ? 'active' : ''}">${isBest ? '✓' : ''}</div>
             <div class="result-title">${opt.title}</div>
+            <button type="button" class="read-aloud-btn" data-read-target="${textId}" data-read-prefix="${readPrefix}">
+              🔊 Read aloud
+            </button>
           </div>
-          <div class="why">${why}</div>
-          <div class="list-cols">
-            <div class="strengths">
-              <h4>Strengths</h4>
-              <ul>
-                ${prosHtml || "<li>No key strengths recorded.</li>"}
-              </ul>
+          <div class="result-content" id="${textId}">
+            <div class="why">${why}</div>
+            <div class="list-cols">
+              <div class="strengths">
+                <h4>Strengths</h4>
+                <ul>
+                  ${prosHtml || "<li>No key strengths recorded.</li>"}
+                </ul>
+              </div>
+              <div class="limitations">
+                <h4>Limitations</h4>
+                <ul>
+                  ${consHtml || "<li>No key limitations recorded.</li>"}
+                </ul>
+              </div>
             </div>
-            <div class="limitations">
-              <h4>Limitations</h4>
-              <ul>
-                ${consHtml || "<li>No key limitations recorded.</li>"}
-              </ul>
+            <div style="font-size:.4em;color:#475569;margin-top:.35rem;">
+              Seasonal/real-world efficiency: ${profile.efficiency} · Install cost: ${profile.installCost} · Space: ${profile.space} · Lifespan: ${profile.lifespan} · Best suited: ${profile.bestFor}
             </div>
-          </div>
-          <div style="font-size:.4em;color:#475569;margin-top:.35rem;">
-            Seasonal/real-world efficiency: ${profile.efficiency} · Install cost: ${profile.installCost} · Space: ${profile.space} · Lifespan: ${profile.lifespan} · Best suited: ${profile.bestFor}
           </div>
         </div>
       </div>
@@ -946,6 +1000,65 @@
     });
     document.getElementById("btn-export-sources").addEventListener("click", () => {
       alert("Sources used:\n- " + sourcesList.join("\n- "));
+    });
+
+    function enforceCombiWater(boilerId, waterId) {
+      const boiler = document.getElementById(boilerId);
+      const water = document.getElementById(waterId);
+      if (!boiler || !water) return;
+
+      const updateWater = () => {
+        if (boiler.value === "combi" && water.value !== "on_demand") {
+          water.value = "on_demand";
+          return true;
+        }
+        return false;
+      };
+
+      boiler.addEventListener("change", () => {
+        const changed = updateWater();
+        if (changed) {
+          render();
+        }
+      });
+
+      water.addEventListener("change", () => {
+        const changed = updateWater();
+        if (changed) {
+          render();
+        }
+      });
+
+      updateWater();
+    }
+
+    enforceCombiWater("currentBoiler", "currentWater");
+    enforceCombiWater("newABoiler", "newAWater");
+    enforceCombiWater("newBBoiler", "newBWater");
+
+    function speakElement(targetId, prefix = "") {
+      if (!("speechSynthesis" in window)) {
+        alert("Read aloud is not supported in this browser.");
+        return;
+      }
+      const el = document.getElementById(targetId);
+      if (!el) return;
+      const text = el.innerText.trim();
+      const fullText = [prefix.trim(), text].filter(Boolean).join(". ");
+      if (!fullText) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(fullText);
+      window.speechSynthesis.speak(utterance);
+    }
+
+    document.addEventListener("click", event => {
+      const btn = event.target.closest(".read-aloud-btn");
+      if (!btn) return;
+      event.preventDefault();
+      const targetId = btn.getAttribute("data-read-target");
+      if (!targetId) return;
+      const prefix = btn.getAttribute("data-read-prefix") || "";
+      speakElement(targetId, prefix);
     });
 
     render();
