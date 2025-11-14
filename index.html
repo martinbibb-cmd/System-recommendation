@@ -573,6 +573,28 @@
         ],
         bestFor: "Modern 2–4 bed homes with 1–2 baths"
       },
+      system_open: {
+        label: "System Boiler (Open-Vented)",
+        efficiency: "87–90%",
+        installCost: "Relative install cost: Medium (system boiler + keep vented tanks)",
+        space: "Vented cylinder + loft tank",
+        lifespan: "15–20 years",
+        maintenance: 3,
+        hotWater: "Stored, gravity or pumped (low pressure)",
+        pressure: "Works with poor mains when boosted",
+        renewables: "Good with solar coil / vented Mixergy",
+        strengths: [
+          "Modern boiler internals while keeping vented pipework",
+          "External pumps and controls allow easy zoning",
+          "Tolerant of legacy systems and solid-fuel links"
+        ],
+        limitations: [
+          "Still relies on loft tanks unless upgraded",
+          "Lower pressure comfort without pumps",
+          "Lower efficiency in practice vs sealed unvented"
+        ],
+        bestFor: "Homes keeping vented hot water but wanting a system boiler plant"
+      },
       regular_open: {
         label: "Regular Boiler (Open-Vented)",
         efficiency: "86–89%",
@@ -617,6 +639,50 @@
         ],
         bestFor: "Upgraded vented systems, low-pressure areas wanting smart control"
       },
+      system_mixergy_open: {
+        label: "Mixergy – Open-Vented (Smart Cylinder + System)",
+        efficiency: "88–91%",
+        installCost: "Relative install cost: Medium-high (smart cylinder premium)",
+        space: "Vented cylinder + loft tank",
+        lifespan: "20–25 years",
+        maintenance: 3,
+        hotWater: "Stored, smart stratified, gravity or pumped",
+        pressure: "Works with poor mains",
+        renewables: "Excellent – PV / boiler / HP compatible",
+        strengths: [
+          "Smart control reduces reheat with system boilers",
+          "Gentle on existing vented pipework",
+          "Easy future upgrade path to renewables"
+        ],
+        limitations: [
+          "Loft tanks remain in place",
+          "Premium kit cost vs plain cylinder",
+          "Needs space for cylinder and F&E tank"
+        ],
+        bestFor: "Vented homes wanting smart cylinder control with a system boiler"
+      },
+      regular_unvented: {
+        label: "Regular Boiler (Unvented)",
+        efficiency: "87–90%",
+        installCost: "Relative install cost: Medium-high (conversion to sealed + safety kit)",
+        space: "Unvented cylinder",
+        lifespan: "15–20 years",
+        maintenance: 3,
+        hotWater: "Stored, mains pressure, multi-outlet",
+        pressure: "Needs good mains pressure",
+        renewables: "Good – works with solar coils and diverters",
+        strengths: [
+          "Keeps familiar regular boiler layout",
+          "Delivers mains-pressure hot water across outlets",
+          "Compatible with solar thermal and PV dump controls"
+        ],
+        limitations: [
+          "Conversion work and discharge pipework add cost",
+          "Requires G3 maintenance and safety checks",
+          "Sealing old pipework needs careful system prep"
+        ],
+        bestFor: "Upgrading vented regular systems where mains can support sealed hot water"
+      },
       mixergy_unvented: {
         label: "Mixergy – Unvented (Smart Cylinder + System)",
         efficiency: "89–92%",
@@ -638,17 +704,80 @@
           "Needs good mains pressure"
         ],
         bestFor: "Modern medium-large homes, multi-bath setups"
+      },
+      regular_mixergy_unvented: {
+        label: "Mixergy – Unvented (Smart Cylinder + Regular)",
+        efficiency: "88–91%",
+        installCost: "Relative install cost: High (smart unvented + system conversion)",
+        space: "Unvented smart cylinder",
+        lifespan: "20–25 years",
+        maintenance: 3,
+        hotWater: "Stored, mains pressure, smart stratification",
+        pressure: "Needs good mains pressure",
+        renewables: "Excellent – PV, heat pump, dynamic tariffs",
+        strengths: [
+          "Retains regular boiler hardware with mains-pressure hot water",
+          "Smart control cuts reheat losses and works with PV",
+          "Future-ready for hybrid heat sources"
+        ],
+        limitations: [
+          "Requires sealed conversion and G3 servicing",
+          "High capital cost vs plain vented regular",
+          "Needs strong incoming mains pressure"
+        ],
+        bestFor: "Households wanting to keep a regular boiler but gain smart unvented performance"
+      },
+      thermal_store: {
+        label: "Thermal Store Cylinder",
+        efficiency: "85–90%",
+        installCost: "Relative install cost: Medium-high (store + controls)",
+        space: "Thermal store / airing cupboard",
+        lifespan: "15–20 years",
+        maintenance: 3,
+        hotWater: "Stored, instantaneous via plate, mains pressure",
+        pressure: "Needs good mains and careful design",
+        renewables: "Excellent – supports multiple heat sources",
+        strengths: [
+          "Integrates boilers, solar, stoves and heat pumps",
+          "Mains-pressure hot water without G3 discharge",
+          "Enables load shifting with PV diverters"
+        ],
+        limitations: [
+          "Higher standing losses than simple cylinders",
+          "Complex controls need specialist commissioning",
+          "Requires space and good insulation"
+        ],
+        bestFor: "Homes linking multiple heat sources or wanting thermal buffering"
       }
+    };
+
+    const profileKeyByCombo = {
+      "combi|on_demand": "combi_on_demand",
+      "regular|open_vented": "regular_open",
+      "regular|mixergy_open": "mixergy_open",
+      "regular|unvented": "regular_unvented",
+      "regular|mixergy_unvented": "regular_mixergy_unvented",
+      "regular|thermal_store": "thermal_store",
+      "system|open_vented": "system_open",
+      "system|mixergy_open": "system_mixergy_open",
+      "system|unvented": "system_unvented",
+      "system|mixergy_unvented": "mixergy_unvented",
+      "system|thermal_store": "thermal_store"
     };
 
     // map boiler+water → profile key
     function pickSystemProfile(boiler, water) {
+      const key = `${boiler}|${water}`;
+      if (profileKeyByCombo[key]) return profileKeyByCombo[key];
+
+      if (water === "thermal_store") return "thermal_store";
+      if (water === "mixergy_unvented") return "mixergy_unvented";
+      if (water === "unvented") return boiler === "regular" ? "regular_unvented" : "system_unvented";
+      if (water === "mixergy_open") return boiler === "system" ? "system_mixergy_open" : "mixergy_open";
+      if (water === "open_vented") return boiler === "system" ? "system_open" : "regular_open";
+      if (water === "on_demand") return "combi_on_demand";
+
       if (boiler === "combi") return "combi_on_demand";
-      if (boiler === "system" && water === "unvented") return "system_unvented";
-      if (boiler === "system" && water === "mixergy_unvented") return "mixergy_unvented";
-      if (boiler === "regular" && (water === "open_vented")) return "regular_open";
-      if (boiler === "regular" && (water === "mixergy_open")) return "mixergy_open";
-      // sensible fallbacks
       if (boiler === "system") return "system_unvented";
       if (boiler === "regular") return "regular_open";
       return "combi_on_demand";
